@@ -1,5 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify, redirect, url_for
 from bson import ObjectId
+from bson.regex import Regex
 #from decorators import jwt_required, admin_required
 import globals
 
@@ -22,11 +23,11 @@ def show_all_books():
 
     query = {}
     if title_filter:
-        query["title"] = {"$in": [title_filter]}
+        query["title"] = {"$regex": Regex(title_filter, 'i')}
     if author_filter:
-        query["author"] = {"$in": [author_filter]}
+        query["author"] = {"$regex": Regex(author_filter, 'i')} 
     if genre_filter:
-        query["genres"] = {"$in": [genre_filter]}
+        query["genres"] = {"$regex": Regex(genre_filter, 'i')}  
     
     all_book_data = []
     for book in books.find(query).skip(page_start).limit(page_size):

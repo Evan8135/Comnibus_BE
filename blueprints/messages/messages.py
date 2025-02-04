@@ -20,15 +20,23 @@ def get_messages():
         "_id": str(message["_id"]),
         "recipient_name": username,
         "content": message["content"],
-        "timestamp": message["timestamp"]
+        "timestamp": message["timestamp"],
+        "is_read": message.get("is_read", False)
     } for message in user_messages]
-    return make_response(jsonify(messages_list), 200)
+    has_unread = any(not msg["is_read"] for msg in messages_list)
+    response = {
+        "messages": messages_list,
+        "hasUnreadMessages": has_unread
+    }
+    
+    return make_response(jsonify(response), 200)
 
 def send_message( content, recipient_name):
     message = { 
         "recipient_name": recipient_name,
         "content": content,
-        "timestamp": datetime.datetime.now(datetime.UTC)
+        "timestamp": datetime.datetime.now(datetime.UTC),
+        "is_read": False
     }
     messages.insert_one(message)
 
@@ -41,6 +49,16 @@ def show_one_message(id):
         return make_response( jsonify( one_message ), 200 )
     else:
         return make_response( jsonify( { "error" : "Invalid Message ID" } ), 404 )
+
+@messages_bp.route("/api/v1.0/inbox/<message_id>/read", methods=["PUT"])
+@jwt_required
+def mark_as_read(message_id):
+    messages.update_one(
+        {"_id": ObjectId(message_id)},
+        {"$set": {"is_read": True}}
+    )
+    return jsonify({"message": "Message marked as read"}), 200
+
 
 @messages_bp.route("/api/v1.0/inbox/<string:id>", methods=["DELETE"])
 @jwt_required

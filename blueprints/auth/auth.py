@@ -5,21 +5,61 @@ import bcrypt
 import globals
 from decorators import jwt_required, admin_required
 from bson import ObjectId
+from blueprints.messages.messages import send_message
 
 auth_bp = Blueprint("auth_bp", __name__)
 
 blacklist = globals.db.blacklist
 users = globals.db.users
-#banned_emails = globals.db.banned_emails
+books = globals.db.books
+banned_emails = globals.db.banned_emails
 
-#@auth_bp.route('/api/v1.0/signup', methods=["POST"])
-#def signup():
-#    name = request.form.get('name')
-#    username = request.form.get('username')
-#    password = request.form.get('email')
-#    user_type = request.form.get('user_type')
-#    favourite_genres = request.form.get('favourite_genres')
-#    admin = request.form.get('admin', False)
+@auth_bp.route('/api/v1.0/signup', methods=["POST"])
+def signup():
+    name = request.form.get('name')
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    user_type = request.form.get('user_type')
+    favourite_genres = request.form.get('favourite_genres')
+    favourite_authors = request.form.get('favourite_authors')
+    admin = request.form.get('admin', False)
+
+    if not name or not username or not password or not email or not user_type:
+        return make_response(jsonify({'message': 'Incomplete user information'}))
+    
+    if users.find_one({'username': username}) or users.find_one({'email': email}):
+        return make_response({jsonify({'message': 'This User is already on COMNIBUS'}), 409})
+    
+    if banned_emails.find_one({'emails': email}):
+        return make_response(jsonify({'message': 'This email is banned'}), 409)
+    
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+    new_user = {
+        'name': name,
+        'username': username,
+        'email': email,
+        'password': hashed_password,
+        'user_type': user_type,
+        'favourite_genres': favourite_genres,
+        'favourite_authors': favourite_authors,
+        'favourite_books': [],
+        'followers': [],
+        'following': [],
+        'have_read': [],
+        'want_to_read': [],
+        'currently_reading': [],
+        'admin': admin,
+        'suspension_end_date': None
+    }
+
+    users.insert_one(new_user)
+    send_message(
+        recipient_name=username,
+        content=f"Dear {name}, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS"
+    )
+    return make_response(jsonify({'message': 'User has been created'}), 201)
 
 @auth_bp.route('/api/v1.0/login', methods=['GET'])
 def login():
@@ -62,22 +102,57 @@ def logout():
     blacklist.insert_one({"token": token})
     return make_response(jsonify({'message' : 'Logout Successful'}), 200)
 
-# ADMINS WILL BE ABLE TO SEE ALL USERS
+
 @auth_bp.route('/api/v1.0/users', methods=["GET"])
 @jwt_required
-@admin_required
 def show_all_users():
-    all_users = list(users.find({}, {'password': 0}))
-    for user in all_users:
+    page_num, page_size = 1, 10
+    search_username = request.args.get('username')
+
+    query = {}
+    if search_username:
+        query["username"] = {"$regex": search_username, "$options": "i"}
+
+    users_list = list(users.find(query, {'password': 0}))  # Exclude passwords
+
+    # Convert ObjectId to string
+    for user in users_list:
         user['_id'] = str(user['_id'])
-    return make_response(jsonify(all_users), 200)
+
+    return make_response(jsonify(users_list), 200)
+
 
 
 
 @auth_bp.route("/api/v1.0/users/<string:id>", methods=["GET"])
 @jwt_required
-@admin_required
 def show_one_user(id):
+    user = users.find_one({"_id": ObjectId(id)}, {"password": 0})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+    
+    user["_id"] = str(user["_id"])
+    
+    reviews_by_user = []
+    for book in books.find({"user_reviews.username": user["username"]}):
+        for review in book.get("user_reviews", []):
+            if review.get("username") == user["username"]:
+                review["_id"] = str(review["_id"])
+                review["book_id"] = str(book["_id"])
+                review["book_title"] = book["title"]
+                reviews_by_user.append(review)
+    
+    response_data = {
+        "user": user,
+        "reviews_by_user": reviews_by_user
+    }
+    
+    return make_response(jsonify(response_data), 200)
+
+    
+@auth_bp.route("/api/v1.0/profile/<string:id>", methods=["GET"])
+@jwt_required
+def show_profile(id):
     user = users.find_one({"_id": ObjectId(id)}, {"password": 0})
     if user:
         user["_id"] = str(user["_id"])
