@@ -37,9 +37,15 @@ for user in users.find():
     users.update_one({"_id": user['_id']},
                      {
                          "$set": {
-                             "favourite_genres": [],
-                             "favourite_authors": [],
-                             "favourite_books": [],
-                             "followers": [],
-                             "following": []                         }
+                             #"favourite_genres": [],
+                             #"favourite_authors": [],
+                             #"favourite_books": [],
+                             #"followers": [],
+                             #"following": []
+                             #"pronouns": "",
+                             "have_read": [],
+                             "want_to_read": [],
+                             "currently_reading": [],
+                             "user_type": "",                        
+                             }
                      })    

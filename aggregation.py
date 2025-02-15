@@ -17,7 +17,7 @@ def user_score_aggregation(id):
                 "total_reviews": {"$sum": 1}, 
                 "positive_reviews": { 
                     "$sum": { 
-                        "$cond": [{"$gte": [{"$toInt": "$user_reviews.stars"}, 3]}, 1, 0] 
+                        "$cond": [{"$gte": ["$user_reviews.stars", 3]}, 1, 0] 
                     } 
                 } 
             } 

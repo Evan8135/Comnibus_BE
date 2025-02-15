@@ -22,7 +22,7 @@ def add_new_review(id):
         #'name': request.form['name'],
         'title': request.form['title'],  # Add title to the review
         'comment': request.form['comment'],
-        'stars': int(request.form['stars']),
+        'stars': float(request.form['stars']),
         'likes': 0,  # Initialize likes count
         'dislikes': 0  # Initialize dislikes count
     }

@@ -5,6 +5,9 @@ import bcrypt
 import globals
 from decorators import jwt_required, admin_required
 from bson import ObjectId
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 from blueprints.messages.messages import send_message
 
 auth_bp = Blueprint("auth_bp", __name__)
@@ -42,8 +45,8 @@ def signup():
         'email': email,
         'password': hashed_password,
         'user_type': user_type,
-        'favourite_genres': favourite_genres,
-        'favourite_authors': favourite_authors,
+        'favourite_genres': favourite_genres.split(",") if favourite_genres else [],
+        'favourite_authors': favourite_authors.split(",") if favourite_authors else [],
         'favourite_books': [],
         'followers': [],
         'following': [],
@@ -104,7 +107,7 @@ def logout():
 
 
 @auth_bp.route('/api/v1.0/users', methods=["GET"])
-@jwt_required
+#@jwt_required
 def show_all_users():
     page_num, page_size = 1, 10
     search_username = request.args.get('username')
@@ -125,7 +128,7 @@ def show_all_users():
 
 
 @auth_bp.route("/api/v1.0/users/<string:id>", methods=["GET"])
-@jwt_required
+#@jwt_required
 def show_one_user(id):
     user = users.find_one({"_id": ObjectId(id)}, {"password": 0})
     if not user:
@@ -150,12 +153,15 @@ def show_one_user(id):
     return make_response(jsonify(response_data), 200)
 
     
-@auth_bp.route("/api/v1.0/profile/<string:id>", methods=["GET"])
+@auth_bp.route("/api/v1.0/profile", methods=["GET"])
 @jwt_required
-def show_profile(id):
-    user = users.find_one({"_id": ObjectId(id)}, {"password": 0})
+def show_profile():
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"password": 0})
     if user:
         user["_id"] = str(user["_id"])
         return make_response(jsonify(user), 200)
     else:
         return make_response(jsonify({"error": "User not found"}), 404)
+    
