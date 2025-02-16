@@ -105,31 +105,45 @@ def get_recommendations():
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Simple personalized recommendation based on genres and authors
+    # Get the user's favorite genres and authors
     fav_genres = user.get("favourite_genres", [])
     fav_authors = user.get("favourite_authors", [])
 
-    # Start with an empty query
-    query = {}
+    # Prepare a list to hold recommended books
+    recommended_books = []
 
-    # If the user has favorite genres, recommend books in those genres
+    # Fetch books based on genres
+    genre_query = {}
     if fav_genres:
-        query["genres"] = {"$in": fav_genres}
+        genre_query["genres"] = {"$in": fav_genres}
 
-    # If the user has favorite authors, recommend books by those authors
+    # Fetch books based on authors
+    author_query = {}
     if fav_authors:
-        query["author"] = {"$in": fav_authors}
+        author_query["author"] = {"$in": fav_authors}
 
-    # Get books based on the query
-    recommended_books = list(books.find(query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres":1}).limit(10))
+    # Query for books based on genres
+    if fav_genres:
+        genre_books = list(books.find(genre_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(10))
+        recommended_books.extend(genre_books)
 
-    # Ensure no duplicates (if a book is in both favorite genres and authors)
+    # Query for books based on authors
+    if fav_authors:
+        author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(10))
+        recommended_books.extend(author_books)
+
+    # Ensure no duplicates (if a book is found in both genres and authors)
     recommended_books = list({str(book["_id"]): book for book in recommended_books}.values())
 
     # Convert ObjectId to string for serialization
     for book in recommended_books:
         book["_id"] = str(book["_id"])
 
-    # Return the recommended books
-    return make_response(jsonify({"recommended_books": recommended_books}), 200)
+    # Return the recommended books along with user's preferences
+    return make_response(jsonify({
+        "recommended_books": recommended_books,
+        "favorite_genres": fav_genres,
+        "favorite_authors": fav_authors
+    }), 200)
+
 
