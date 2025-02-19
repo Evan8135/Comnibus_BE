@@ -124,12 +124,12 @@ def get_recommendations():
 
     # Query for books based on genres
     if fav_genres:
-        genre_books = list(books.find(genre_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(10))
+        genre_books = list(books.find(genre_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(50))
         recommended_books.extend(genre_books)
 
     # Query for books based on authors
     if fav_authors:
-        author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(10))
+        author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(15))
         recommended_books.extend(author_books)
 
     # Ensure no duplicates (if a book is found in both genres and authors)

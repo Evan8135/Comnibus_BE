@@ -1,5 +1,6 @@
 from flask import Flask
 from blueprints.books.books import books_bp
+from blueprints.requests.request_books import request_books_bp
 from blueprints.genres.genres import genres_bp
 from blueprints.authors.authors import authors_bp
 from blueprints.reviews.reviews import reviews_bp
@@ -11,6 +12,7 @@ app = Flask(__name__)
 CORS(app, origins="http://localhost:4200")
 
 app.register_blueprint(books_bp)
+app.register_blueprint(request_books_bp)
 app.register_blueprint(genres_bp)
 app.register_blueprint(authors_bp)
 app.register_blueprint(reviews_bp)
