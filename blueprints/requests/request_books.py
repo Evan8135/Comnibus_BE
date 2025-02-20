@@ -15,23 +15,42 @@ users = globals.db.users
 def add_new_book_request():
     token_data = request.token_data
     username = token_data['username']
-    if 'title' in request.form and 'author' in request.form and 'genres' in request.form and 'language' in request.form:
-        new_request = {
-            '_id': ObjectId(),
-            'title': request.form["title"],
-            'series': request.form.get("series", ""),
-            'author': request.form["author"],
-            'genres': request.form["genres"],
-            'publishDate': request.form.get("publishDate", ""),
-            'language': request.form["language"],
-            'isbn': request.form.get("isbn", ""),
-            'username': username
-        }
-        new_request_id = requests.insert_one(new_request)
-        request_link = f"http://localhost:4200/api/v1.0/requests/{new_request_id.inserted_id}"
-        return make_response(jsonify({"message": "Your book request has been submitted and will be reviewed by our admins", "url": request_link}), 201)
-    else:
+    title = request.form.get('title')
+    author = request.form.get('author')
+    genres = request.form.get('genres')
+    language = request.form.get('language')
+    series = request.form.get('series', '')
+    publish_date = request.form.get('publishDate', '')
+    isbn = request.form.get('isbn', '')
+
+    # Validate required fields
+    if not title or not author or not genres or not language:
         return make_response(jsonify({"error": "You missed a required field"}), 400)
+
+    # Process genres into a list (same way `signup` handles favourite_genres)
+    genres_list = genres.split(",") if genres else []
+
+    new_request = {
+        '_id': ObjectId(),
+        'title': title,
+        'series': series,
+        'author': author,
+        'genres': genres_list,
+        'publishDate': publish_date,
+        'language': language,
+        'isbn': isbn,
+        'username': username
+    }
+
+    # Insert into MongoDB (ensure `requests` is the correct collection)
+    new_request_id = requests.insert_one(new_request)
+
+    request_link = f"http://localhost:4200/api/v1.0/requests/{new_request_id.inserted_id}"
+    
+    return make_response(jsonify({
+        "message": "Your book request has been submitted and will be reviewed by our admins",
+        "url": request_link
+    }), 201)
 
 @request_books_bp.route("/api/v1.0/requests", methods=["GET"])
 @jwt_required
@@ -69,10 +88,16 @@ def approve_book_request(id):
         return make_response(jsonify({"error": "Request not found"}), 404)
     
     approved_book_data = request.form.to_dict()
+
+    if 'genres' in approved_book_data:
+        approved_book_data['genres'] = [genre.strip() for genre in approved_book_data['genres'].split(",")] if isinstance(approved_book_data['genres'], str) else approved_book_data['genres']
+    else:
+        approved_book_data['genres'] = book_request['genres']
+
     approved_book_data.update({
         'title': book_request['title'],
         'author': book_request['author'],
-        'genres': book_request['genres'],
+        'genres': approved_book_data['genres'],
         'language': book_request['language'],
         'series': book_request['series'],
         'user_score': approved_book_data.get('user_score', 0),
@@ -123,10 +148,10 @@ def reject_book_request(id):
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
     
 @request_books_bp.route("/api/v1.0/requests/<string:id>", methods=["DELETE"])
-#@jwt_required
-#@admin_required
+@jwt_required
+@admin_required
 def delete_request(id):
-    result = request.delete_one({"_id":str(id)})
+    result = requests.delete_one({"_id":ObjectId(id)})
     if result.deleted_count == 1:
         return make_response(jsonify({}), 204)
     else:
