@@ -6,6 +6,7 @@ from blueprints.authors.authors import authors_bp
 from blueprints.reviews.reviews import reviews_bp
 from blueprints.auth.auth import auth_bp
 from blueprints.messages.messages import messages_bp
+from blueprints.imgur_uploader.imgur_uploader import imgur_upload_bp
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -18,6 +19,7 @@ app.register_blueprint(authors_bp)
 app.register_blueprint(reviews_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(messages_bp)
+app.register_blueprint(imgur_upload_bp)
 
 
 

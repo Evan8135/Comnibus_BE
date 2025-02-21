@@ -93,6 +93,16 @@ def show_one_book(id):
 
     return make_response(jsonify(response_data), 200)
 
+@books_bp.route("/api/v1.0/books/<string:id>", methods=["DELETE"])
+@jwt_required
+@admin_required
+def delete_request(id):
+    result = books.delete_one({"_id":ObjectId(id)})
+    if result.deleted_count == 1:
+        return make_response(jsonify({}), 204)
+    else:
+        return make_response(jsonify({"error": "Invalid book ID"}), 404)
+
 @books_bp.route("/api/v1.0/recommendations", methods=["GET"])
 @jwt_required
 def get_recommendations():

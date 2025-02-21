@@ -28,7 +28,7 @@ def add_new_book_request():
         return make_response(jsonify({"error": "You missed a required field"}), 400)
 
     # Process genres into a list (same way `signup` handles favourite_genres)
-    genres_list = genres.split(",") if genres else []
+    genres_list = genres.split(", ") if genres else []
 
     new_request = {
         '_id': ObjectId(),
@@ -87,12 +87,13 @@ def approve_book_request(id):
     if not book_request:
         return make_response(jsonify({"error": "Request not found"}), 404)
     
-    approved_book_data = request.form.to_dict()
+    approved_book_data = request.get_json()
 
     if 'genres' in approved_book_data:
         approved_book_data['genres'] = [genre.strip() for genre in approved_book_data['genres'].split(",")] if isinstance(approved_book_data['genres'], str) else approved_book_data['genres']
     else:
         approved_book_data['genres'] = book_request['genres']
+
 
     approved_book_data.update({
         'title': book_request['title'],
@@ -118,7 +119,7 @@ def approve_book_request(id):
     })
     
     approved_book_id = books.insert_one(approved_book_data)
-    approved_book_link = f"http://localhost:4200/api/v1.0/books/{approved_book_id.inserted_id}"
+    approved_book_link = f"http://localhost:5000/api/v1.0/books/{approved_book_id.inserted_id}"
     send_message(
         recipient_name=book_request['username'],
         content=f"Dear '{book_request['username']}', your request for '{book_request['title']}' has been approved and added to our system. Here is the link to the book: {approved_book_link}. Thank you."
