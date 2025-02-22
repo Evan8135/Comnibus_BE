@@ -5,9 +5,6 @@ import bcrypt
 import globals
 from decorators import jwt_required, admin_required
 from bson import ObjectId
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 from blueprints.messages.messages import send_message
 
 auth_bp = Blueprint("auth_bp", __name__)
@@ -48,6 +45,7 @@ def signup():
         'favourite_genres': favourite_genres.split(",") if favourite_genres else [],
         'favourite_authors': favourite_authors.split(",") if favourite_authors else [],
         'favourite_books': [],
+        'profile_pic': '',
         'followers': [],
         'following': [],
         'have_read': [],
@@ -165,3 +163,74 @@ def show_profile():
     else:
         return make_response(jsonify({"error": "User not found"}), 404)
     
+@auth_bp.route('/api/v1.0/profile', methods=['PUT'])
+@jwt_required
+def edit_profile():
+    token_data = request.token_data
+    username = token_data['username']
+    
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Get form data
+    data = request.get_json()
+    
+    updates = {}
+
+    if "name" in data:
+        updates["name"] = data["name"]
+    if "username" in data and data["username"] != user["username"]:
+        if users.find_one({"username": data["username"]}):
+            return make_response(jsonify({"error": "Username already taken"}), 409)
+        updates["username"] = data["username"]
+    if "email" in data and data["email"] != user["email"]:
+        if users.find_one({"email": data["email"]}):
+            return make_response(jsonify({"error": "Email already in use"}), 409)
+        updates["email"] = data["email"]
+    if "favourite_genres" in data:
+        updates["favourite_genres"] = data["favourite_genres"]
+    if "favourite_authors" in data:
+        updates["favourite_authors"] = data["favourite_authors"]
+    if "profile_pic" in data:
+        profile_pic_url = data["profile_pic"]
+        
+        # If you want to make sure the profile pic is a permanent URL (not a blob URL)
+        if profile_pic_url.startswith("blob:"):
+            return make_response(jsonify({"error": "Temporary blob URL is not allowed. Please upload a permanent image URL."}), 400)
+        
+        updates["profile_pic"] = profile_pic_url
+    #if "password" in data:
+    #    hashed_password = bcrypt.hashpw(data["password"].encode('utf-8'), bcrypt.gensalt())
+    #    updates["password"] = hashed_password
+
+    users.update_one({"username": username}, {"$set": updates})
+
+    return make_response(jsonify({"message": "Profile updated successfully"}), 200)
+
+@auth_bp.route('/api/v1.0/remove-profile-pic', methods=['POST'])
+@jwt_required
+def remove_profile_pic():
+    token_data = request.token_data
+    username = token_data['username']
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Set the profile picture field to null or default image URL
+    users.update_one({"username": username}, {"$set": {"profile_pic": ""}})
+
+    return make_response(jsonify({"message": "Profile picture removed successfully"}), 200)
+
+
+    
+@auth_bp.route("/api/v1.0/users/<string:id>", methods=["DELETE"])
+@jwt_required
+@admin_required
+def delete_request(id):
+    result = users.delete_one({"_id":ObjectId(id)})
+    if result.deleted_count == 1:
+        return make_response(jsonify({}), 204)
+    else:
+        return make_response(jsonify({"error": "Invalid user ID"}), 404)

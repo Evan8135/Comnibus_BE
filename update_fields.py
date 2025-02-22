@@ -43,9 +43,10 @@ for user in users.find():
                              #"followers": [],
                              #"following": []
                              #"pronouns": "",
-                             "have_read": [],
-                             "want_to_read": [],
-                             "currently_reading": [],
-                             "user_type": "",                        
+                             #"have_read": [],
+                             #"want_to_read": [],
+                             #"currently_reading": [],
+                             #"user_type": "",
+                             "profile_pic": ""                        
                              }
                      })    
