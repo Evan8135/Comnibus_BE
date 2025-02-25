@@ -194,6 +194,9 @@ def edit_profile():
         updates["favourite_authors"] = data["favourite_authors"]
     if "profile_pic" in data:
         profile_pic_url = data["profile_pic"]
+
+        if not profile_pic_url:  # If it's an empty string (""), handle accordingly
+            updates["profile_pic"] = ""
         
         # If you want to make sure the profile pic is a permanent URL (not a blob URL)
         if profile_pic_url.startswith("blob:"):

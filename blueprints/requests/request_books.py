@@ -1,4 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify
+import re
 from bson import ObjectId
 from decorators import jwt_required, admin_required
 import globals
@@ -79,6 +80,7 @@ def show_one_book_request(id):
     else:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
 
+
 @request_books_bp.route("/api/v1.0/requests/<string:id>/approve", methods=["POST"])
 @jwt_required
 @admin_required
@@ -88,11 +90,17 @@ def approve_book_request(id):
         return make_response(jsonify({"error": "Request not found"}), 404)
     
     approved_book_data = request.get_json()
-
-    if 'genres' in approved_book_data:
-        approved_book_data['genres'] = [genre.strip() for genre in approved_book_data['genres'].split(",")] if isinstance(approved_book_data['genres'], str) else approved_book_data['genres']
-    else:
-        approved_book_data['genres'] = book_request['genres']
+    
+    def parse_comma_separated(value):
+        """Convert a comma-separated string into a list, handling spaces correctly."""
+        if isinstance(value, str):
+            return [item.strip() for item in re.split(r",\s*", value) if item.strip()]
+        return value if isinstance(value, list) else []
+    
+    # Apply parsing to multiple fields
+    for field in ["genres", "characters", "triggers", "awards"]:
+        if field in approved_book_data:
+            approved_book_data[field] = parse_comma_separated(approved_book_data[field])
 
 
     approved_book_data.update({
