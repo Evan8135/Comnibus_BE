@@ -170,6 +170,18 @@ def get_recommendations():
         author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(15))
         recommended_books.extend(author_books)
 
+    rated_books = user.get("have_read", [])
+    for rated_book in rated_books:
+        if rated_book["stars"] > 2.5:  # Only if rated above half a star
+            same_author_books = books.find({"author": rated_book["author"], "_id": {"$ne": ObjectId(rated_book["id"])}}).limit(3)
+            for book in same_author_books:
+                recommended_books.append({
+                    "_id": str(book["_id"]),
+                    "title": book["title"],
+                    "author": book["author"],
+                    "coverImg": book["coverImg"]
+                })
+
     # Ensure no duplicates (if a book is found in both genres and authors)
     recommended_books = list({str(book["_id"]): book for book in recommended_books}.values())
 
@@ -184,29 +196,34 @@ def get_recommendations():
         "favorite_authors": fav_authors
     }), 200)
 
-
 @books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["POST"])
 @jwt_required
 def have_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
-    
+
     # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
-    
+
     # Find the book
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
-    
-    # Get user rating from request
-    data = request.get_json()
-    stars = float(data.get['stars']),
-    if stars is None or not (0 <= stars <= 5):
-        return make_response(jsonify({"error": "Invalid rating. Must be between 0 and 5."}), 400)
-    
+
+    # Retrieve 'stars' from form data
+    if "stars" not in request.form:
+        return make_response(jsonify({"error": "Missing 'stars' field"}), 400)
+
+    try:
+        stars = float(request.form["stars"])
+        if stars < 0 or stars > 5:
+            return make_response(jsonify({"error": "Stars must be between 0 and 5"}), 400)
+    except ValueError:
+        return make_response(jsonify({"error": "Invalid rating format"}), 400)
+
+    # Prepare book data
     book_data = {
         "id": id,
         "title": book.get("title"),
@@ -215,20 +232,18 @@ def have_read_book(id):
         "genres": book.get("genres"),
         "stars": stars
     }
-    
-    # Check if book is already in have_read list
+
+    # Check if the book is already marked as read
     if "have_read" in user and any(b["id"] == id for b in user["have_read"]):
         return make_response(jsonify({"message": "Book already marked as read"}), 200)
-    
-    # Add book to have_read list
+
+    # Add book to 'have_read' list
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"have_read": book_data}})
-    
-    # Recalculate and update the book's user score
-    new_user_score = user_score_aggregation(id)
-    if new_user_score is not None:
-        books.update_one({"_id": ObjectId(id)}, {"$set": {"user_score": new_user_score}})
-    
-    return make_response(jsonify({"message": "Book added to have_read list", "new_user_score": new_user_score}), 200)
+
+    return make_response(jsonify({"message": "Book added to have_read list"}), 200)
+
+
+
 
 @books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["DELETE"])
 @jwt_required
@@ -248,15 +263,11 @@ def remove_have_read_book(id):
     # Remove the book from have_read
     users.update_one({"_id": user["_id"]}, {"$pull": {"have_read": {"id": id}}})
 
-    # **Recalculate user score**
-    user_score = user_score_aggregation(id)
 
-    # **Update book document with new user_score**
-    books.update_one({"_id": ObjectId(id)}, {"$set": {"user_score": user_score}})
+
 
     return make_response(jsonify({
         "message": "Book removed from have_read list",
-        "user_score": user_score
     }), 200)
 
 

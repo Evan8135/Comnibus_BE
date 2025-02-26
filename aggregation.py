@@ -3,10 +3,10 @@ import globals
 
 books = globals.db.books
 
-def user_score_aggregation(id): 
+def user_score_aggregation(book_id): 
     pipeline = [ 
         { 
-            "$match": {"_id": ObjectId(id)} 
+            "$match": {"_id": ObjectId(book_id)} 
         }, 
         { 
             "$unwind": "$user_reviews" 
@@ -21,22 +21,28 @@ def user_score_aggregation(id):
                     } 
                 } 
             } 
-        }, 
+        },
         { 
             "$project": { 
-                "user_score": { 
-                    "$round": [
-                        { 
-                            "$multiply": [
-                                {"$divide": ["$positive_reviews", "$total_reviews"]},
-                                5  # Score out of 5
+                "user_score": {
+                    "$cond": {
+                        "if": {"$eq": ["$total_reviews", 0]},  # If there are no reviews
+                        "then": 0,  # Set user score to 0
+                        "else": {
+                            "$round": [
+                                { 
+                                    "$multiply": [
+                                        {"$divide": ["$positive_reviews", "$total_reviews"]},
+                                        5  # Score out of 5
+                                    ]
+                                },
+                                1
                             ]
-                        },
-                        1
-                    ]
+                        }
+                    }
                 } 
             } 
-        } 
+        }
     ] 
     result = list(books.aggregate(pipeline)) 
-    return result[0]['user_score'] if result else None
+    return result[0]['user_score'] if result else 0  # Ensure user score is 0 if no reviews exist

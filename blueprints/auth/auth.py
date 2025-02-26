@@ -103,6 +103,11 @@ def logout():
     blacklist.insert_one({"token": token})
     return make_response(jsonify({'message' : 'Logout Successful'}), 200)
 
+def serialize_user(user):
+    """ Convert ObjectId fields to string """
+    user['_id'] = str(user['_id'])
+    return user
+
 
 @auth_bp.route('/api/v1.0/users', methods=["GET"])
 #@jwt_required
@@ -149,6 +154,155 @@ def show_one_user(id):
     }
     
     return make_response(jsonify(response_data), 200)
+
+
+    
+    
+@auth_bp.route('/api/v1.0/users/<string:id>/follow', methods=["POST"])
+@jwt_required
+def follow_user(id):
+    token_data = request.token_data
+    username = token_data['username']
+
+    user_to_follow = users.find_one({"_id": ObjectId(id)}, {"password": 0})
+    if not user_to_follow:
+        return make_response(jsonify({"error": "User to follow not found"}), 404)
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    if id == str(user["_id"]):
+        return make_response(jsonify({"error": "You cannot follow yourself"}), 400)
+
+    # Check if the user is already following
+    if id in user["following"]:
+        return make_response(jsonify({"message": "Already following this user"}), 400)
+    # Add user to the following list of the current user and add the current user to the followers list of the other user
+    users.update_one({"_id": user["_id"]}, {"$push": {"following": user_to_follow["username"]}})
+    users.update_one({"_id": user_to_follow["_id"]}, {"$push": {"followers": user["username"]}})
+
+    return make_response(jsonify({"message": f"Successfully followed {user_to_follow['username']}"}), 200)
+
+@auth_bp.route('/api/v1.0/users/<string:id>/unfollow', methods=["POST"])
+@jwt_required
+def unfollow_user(id):
+    token_data = request.token_data
+    username = token_data['username']
+
+    user_to_unfollow = users.find_one({"_id": ObjectId(id)})
+    if not user_to_unfollow:
+        return make_response(jsonify({"error": "User to unfollow not found"}), 404)
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    if id == str(user["_id"]):
+        return make_response(jsonify({"error": "You cannot unfollow yourself"}), 400)
+
+    # Check if the user is not following
+    if id not in user["following"]:
+        return make_response(jsonify({"message": "You are not following this user"}), 400)
+
+    # Remove user from the following list of the current user and remove the current user from the followers list of the other user
+    users.update_one({"_id": user["_id"]}, {"$pull": {"following": id}})
+    users.update_one({"_id": user_to_unfollow["_id"]}, {"$pull": {"followers": user["_id"]}})
+
+    return make_response(jsonify({"message": f"Successfully unfollowed {user_to_unfollow['username']}"}), 200)
+
+@auth_bp.route('/api/v1.0/feed', methods=["GET"])
+@jwt_required
+def user_feed():
+    token_data = request.token_data
+    username = token_data['username']
+    
+    # Fetch the user document to get the list of users they are following
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    following_ids = user.get("following", [])
+    if not following_ids:
+        return make_response(jsonify({"message": "You are not following anyone."}), 200)
+
+    # Create a list to hold the activities
+    feed_activities = []
+
+    # Fetch activities (e.g., book reviews) for all users the current user is following
+    for followed_user_id in following_ids:
+        followed_user = users.find_one({"_id": ObjectId(followed_user_id)})
+        
+        if followed_user:
+            # Get recent reviews for the followed user
+            reviews_by_user = []
+            for book in books.find({"user_reviews.username": followed_user["username"]}):
+                for review in book.get("user_reviews", []):
+                    if review.get("username") == followed_user["username"]:
+                        review["_id"] = str(review["_id"])
+                        review["book_id"] = str(book["_id"])
+                        review["book_title"] = book["title"]
+                        reviews_by_user.append(review)
+            
+            # If there are any reviews by this user, add them to the feed
+            if reviews_by_user:
+                for review in reviews_by_user:
+                    feed_activities.append({
+                        "activity_type": "Review",
+                        "username": followed_user["username"],
+                        "book_title": review["book_title"],
+                        "review_content": review["content"],
+                        "timestamp": review["created_at"] if "created_at" in review else str(datetime.now())
+                    })
+
+    # Sort activities by timestamp in reverse order (most recent first)
+    feed_activities = sorted(feed_activities, key=lambda x: x["timestamp"], reverse=True)
+    
+    # Return the combined feed activities
+    return make_response(jsonify({"feed": feed_activities}), 200)
+
+@auth_bp.route('/api/v1.0/remove-all-followers', methods=["POST"])
+@jwt_required
+def remove_all_followers():
+    token_data = request.token_data
+    username = token_data['username']
+
+    # Retrieve the user from the database
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Remove all followers from the user's followers list
+    users.update_one({"_id": user["_id"]}, {"$set": {"followers": []}})
+
+    # Optionally, you may want to remove the user from the followers lists of those who were following them
+    for follower in user['followers']:
+        users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
+
+    return make_response(jsonify({"message": "All followers removed successfully"}), 200)
+
+@auth_bp.route('/api/v1.0/remove-all-following', methods=["POST"])
+@jwt_required
+def remove_all_following():
+    token_data = request.token_data
+    username = token_data['username']
+
+    # Retrieve the user from the database
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Remove all followers from the user's followers list
+    users.update_one({"_id": user["_id"]}, {"$set": {"following": []}})
+
+    # Optionally, you may want to remove the user from the followers lists of those who were following them
+    for follower in user['followers']:
+        users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
+
+    return make_response(jsonify({"message": "All followers removed successfully"}), 200)
+
+
+
 
     
 @auth_bp.route("/api/v1.0/profile", methods=["GET"])

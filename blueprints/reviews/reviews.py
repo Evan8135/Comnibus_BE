@@ -45,6 +45,7 @@ def show_all_reviews(id):
     book = books.find_one({"_id": ObjectId(id)}, {"user_reviews": 1, "_id": 0})
     user_reviews = book.get('user_reviews', ())
 
+
     for review in user_reviews:
         review['_id'] = str(review['_id'])
         all_reviews.append(review)
@@ -139,6 +140,7 @@ def delete_review(book_id, review_id):
     current_user = token_data['username']
     admin = token_data.get('admin', False)
 
+    # Find the book and the specific review to delete
     book = books.find_one(
         {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id)},
         {"user_reviews.$": 1}
@@ -154,5 +156,12 @@ def delete_review(book_id, review_id):
     if not admin and review_username != current_user:
         return make_response(jsonify({"error": "Unauthorized to delete this review"}), 403)
 
-    books.update_one({ "_id" : ObjectId(book_id) }, { "$pull" : { "user_reviews" : { "_id" : ObjectId(review_id) } } } )
-    return make_response( jsonify( {} ), 204)
+    # Remove the review from the book
+    books.update_one({ "_id" : ObjectId(book_id) }, { "$pull" : { "user_reviews" : { "_id" : ObjectId(review_id) } } })
+    
+    # Recalculate the user score after deleting the review
+    user_score = user_score_aggregation(book_id)  # Corrected to use book_id
+    books.update_one({"_id": ObjectId(book_id)}, {"$set": {"user_score": user_score}})
+
+    return make_response(jsonify({}), 204)
+

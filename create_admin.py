@@ -6,10 +6,10 @@ users = globals.db.users
 # CREATING THE ADMIN USER
 admin_user_list = [
     {
-        "name" : "Page Master",
-        "username": "pagemaster1",
+        "name" : "Page Master 2",
+        "username": "pagemaster2",
         "password": b"Agamemnon",
-        "email": "evan8135@gmail.com",
+        "email": "evan88135@gmail.com",
         "admin": True
     }
 ]
