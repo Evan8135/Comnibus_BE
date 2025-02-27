@@ -2,6 +2,7 @@ from bson import ObjectId
 import globals
 
 books = globals.db.books
+users = globals.db.users
 
 def user_score_aggregation(book_id): 
     pipeline = [ 
@@ -46,3 +47,42 @@ def user_score_aggregation(book_id):
     ] 
     result = list(books.aggregate(pipeline)) 
     return result[0]['user_score'] if result else 0  # Ensure user score is 0 if no reviews exist
+
+def user_progress_aggregation(user_id):
+    pipeline = [
+        {
+            "$match": {"_id": ObjectId(user_id)}
+        },
+        {
+            "$unwind": "$currently_reading"
+        },
+        {
+            "$group": {
+                "_id": "$_id",
+                "total_pages": {"$sum": "$currently_reading.pages"},
+                "read_pages": {"$sum": "$currently_reading.current_page"}
+            }
+        },
+        {
+            "$project": {
+                "progress_percentage": {
+                    "$cond": {
+                        "if": {"$eq": ["$total_pages", 0]},
+                        "then": 0,
+                        "else": {
+                            "$round": [
+                                {"$multiply": [
+                                    {"$divide": ["$read_pages", "$total_pages"]},
+                                    100
+                                ]},
+                                2
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    ]
+    result = list(users.aggregate(pipeline))
+    return result[0]['progress_percentage'] if result else 0
+
