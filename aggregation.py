@@ -59,7 +59,7 @@ def user_progress_aggregation(user_id):
         {
             "$group": {
                 "_id": "$_id",
-                "total_pages": {"$sum": "$currently_reading.pages"},
+                "total_pages": {"$sum": "$currently_reading.total_pages"},
                 "read_pages": {"$sum": "$currently_reading.current_page"}
             }
         },
@@ -75,7 +75,7 @@ def user_progress_aggregation(user_id):
                                     {"$divide": ["$read_pages", "$total_pages"]},
                                     100
                                 ]},
-                                2
+                                0  # Round to the nearest whole number
                             ]
                         }
                     }
@@ -85,4 +85,3 @@ def user_progress_aggregation(user_id):
     ]
     result = list(users.aggregate(pipeline))
     return result[0]['progress_percentage'] if result else 0
-

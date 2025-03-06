@@ -2,7 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, redirect, url_for
 from bson import ObjectId
 from bson.regex import Regex
 from decorators import jwt_required, admin_required
-from aggregation import user_score_aggregation
+from aggregation import user_progress_aggregation
 import globals
 
 books_bp = Blueprint("books_bp", __name__)
@@ -315,20 +315,17 @@ def want_to_read_book(id):
 def start_to_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
-
+    
     # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
-
+    
     # Find the book
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
-
     
-
-    # Prepare book data
     book_data = {
         "_id": id,
         "title": book.get("title"),
@@ -336,42 +333,47 @@ def start_to_read_book(id):
         "author": book.get("author"),
         "genres": book.get("genres"),
         "total_pages": book.get("pages"),
-        "read_page": 0,
+        "current_page": 0,
         "progress": 0
     }
-
-    # Check if the book is already marked as read
-    if "have_read" in user:
-        users.update_one(
-            {"_id": user["_id"]},
-            {"$pull": {"have_read": {"_id": id}}}
-        )
     
-    # Remove book from 'want_to_read' if it exists
+    # Check if the book is already in the 'currently_reading' list
+    if "currently_reading" in user and any(b["_id"] == id for b in user["currently_reading"]):
+        return make_response(jsonify({"message": "Book already in currently reading list"}), 200)
+
+    # Remove the book from 'want_to_read' if it exists
     if "want_to_read" in user:
         users.update_one(
             {"_id": user["_id"]},
             {"$pull": {"want_to_read": {"_id": id}}}
         )
 
-    # Add book to 'have_read' list
+    
+    # Add book to have_read list
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"currently_reading": book_data}})
+    
+    
+    return make_response(jsonify({"message": "Book added to current reads"}), 200)
 
-    return make_response(jsonify({"message": "Book added to currently reading list"}), 200)
 
 
-@books_bp.route("/api/v1.0/users/<string:user_id>/currently-reading", methods=["GET"])
+
+@books_bp.route("/api/v1.0/currently-reading", methods=["GET"])
 @jwt_required
-def get_all_current_reads(user_id):
-    user = users.find_one({"_id": ObjectId(user_id)}, {"currently_reading": 1})
+def get_all_current_reads():
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"currently_reading": 1})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     return make_response(jsonify({"currently_reading": user.get("currently_reading", [])}), 200)
 
-@books_bp.route("/api/v1.0/users/<string:user_id>/currently-reading/<string:book_id>", methods=["GET"])
+@books_bp.route("/api/v1.0/currently-reading/<string:book_id>", methods=["GET"])
 @jwt_required
-def get_current_read(user_id, book_id):
-    user = users.find_one({"_id": ObjectId(user_id)}, {"currently_reading": 1})
+def get_current_read(book_id):
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"currently_reading": 1})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     book = next((b for b in user.get("currently_reading", []) if b["_id"] == book_id), None)
@@ -379,9 +381,59 @@ def get_current_read(user_id, book_id):
         return make_response(jsonify({"error": "Book not found in currently reading list"}), 404)
     return make_response(jsonify({"book": book}), 200)
 
-@books_bp.route("/api/v1.0/users/<string:user_id>/currently-reading/<string:book_id>", methods=["PATCH"])
+
+
+
+@books_bp.route("/api/v1.0/currently-reading/<string:book_id>", methods=["POST"])
 @jwt_required
-def update_current_page(user_id, book_id):
+def update_reading_progress(book_id):
+    token_data = request.token_data
+    username = token_data["username"]
+    new_page = request.form.get("current_page")
+    
+    if new_page is None or not new_page.isdigit() or int(new_page) < 0:
+        return make_response(jsonify({"error": "Invalid page number"}), 400)
+    
+    new_page = int(new_page)
+    
+    # Find the user
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+    
+    # Find the book in the user's currently reading list
+    currently_reading = user.get("currently_reading", [])
+    book = next((b for b in currently_reading if str(b["_id"]) == book_id), None)
+    
+    if not book:
+        return make_response(jsonify({"error": "Book not found in currently reading list"}), 404)
+    
+    total_pages = book.get("total_pages", 0)
+    
+    if new_page > total_pages:
+        return make_response(jsonify({"error": "Page number exceeds total pages"}), 400)
+    
+    # Update the current page in the user's currently reading list
+    users.update_one(
+        {"_id": user["_id"], "currently_reading._id": book_id},
+        {"$set": {"currently_reading.$.current_page": new_page}}
+    )
+    
+    # Recalculate progress
+    progress = user_progress_aggregation(user["_id"])
+    
+    # Update progress in the currently reading list
+    users.update_one(
+        {"_id": user["_id"], "currently_reading._id": book_id},
+        {"$set": {"currently_reading.$.progress": progress}}
+    )
+    
+    return make_response(jsonify({"message": "Progress updated", "progress": progress}), 200)
+
+
+@books_bp.route("/api/v1.0/books/<string:id>/currently-reading", methods=["DELETE"])
+@jwt_required
+def remove_currently_reading_book(id):
     token_data = request.token_data
     username = token_data["username"]
 
@@ -389,26 +441,61 @@ def update_current_page(user_id, book_id):
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Check if the book is in have_read
+    if "currently_reading" not in user or not any(b["_id"] == id for b in user["currently_reading"]):
+        return make_response(jsonify({"error": "Book not found in currently_reading list"}), 404)
+
+    # Remove the book from have_read
+    users.update_one({"_id": user["_id"]}, {"$pull": {"currently_reading": {"_id": id}}})
+
+    return make_response(jsonify({
+        "message": "Book removed from current reads",
+    }), 200)
+
+@books_bp.route("/api/v1.0/books/<string:id>/add-to-favourites", methods=["POST"])
+@jwt_required
+def add_to_favourites(id):
+    token_data = request.token_data
+    username = token_data["username"]
     
-    data = request.get_json()
-    new_page = data.get("current_page")
-    if new_page is None or not isinstance(new_page, int) or new_page < 0:
-        return make_response(jsonify({"error": "Invalid page number"}), 400)
-    
-    user = users.find_one({"_id": ObjectId(user_id)})
+    # Find the user
+    user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     
-    updated = False
-    for book in user.get("currently_reading", []):
-        if book["_id"] == book_id:
-            book["current_page"] = new_page
-            book["progress"] = round((new_page / book["pages"]) * 100, 2) if book["pages"] > 0 else 0
-            updated = True
-            break
+    # Find the book
+    book = books.find_one({"_id": ObjectId(id)})
+    if not book:
+        return make_response(jsonify({"error": "Invalid Book ID"}), 404)
     
-    if not updated:
-        return make_response(jsonify({"error": "Book not found in currently reading list"}), 404)
+    book_data = {
+        "_id": id,
+        "title": book.get("title"),
+        "coverImg": book.get("coverImg"),
+        "author": book.get("author"),
+        "genres": book.get("genres"),
+        "pages": book.get("pages"),
+    }
     
-    users.update_one({"_id": ObjectId(user_id)}, {"$set": {"currently_reading": user["currently_reading"]}})
-    return make_response(jsonify({"message": "Current page updated successfully"}), 200)
+    # Check if the book is already in the 'currently_reading' list
+    if "favourite_books" in user and any(b["_id"] == id for b in user["favourite_books"]):
+        return make_response(jsonify({"message": "Book already in favourites"}), 200)
+
+
+    
+    # Add book to have_read list
+    users.update_one({"_id": user["_id"]}, {"$addToSet": {"favourite_books": book_data}})
+    
+    
+    return make_response(jsonify({"message": "Book added to favourites"}), 200)
+
+@books_bp.route("/api/v1.0/favourites", methods=["GET"])
+@jwt_required
+def get_all_favourite_reads():
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"favourite_books": 1})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+    return make_response(jsonify({"favourite_books": user.get("favourite_books", [])}), 200)

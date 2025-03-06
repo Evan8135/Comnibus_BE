@@ -20,6 +20,7 @@ def signup():
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
+    pronouns = request.form.get('pronouns')
     user_type = request.form.get('user_type')
     favourite_genres = request.form.get('favourite_genres')
     favourite_authors = request.form.get('favourite_authors')
@@ -41,6 +42,7 @@ def signup():
         'username': username,
         'email': email,
         'password': hashed_password,
+        'pronouns': pronouns,
         'user_type': user_type,
         'favourite_genres': favourite_genres.split(",") if favourite_genres else [],
         'favourite_authors': favourite_authors.split(",") if favourite_authors else [],
@@ -164,25 +166,44 @@ def follow_user(id):
     token_data = request.token_data
     username = token_data['username']
 
+    # Fetch the user to follow
     user_to_follow = users.find_one({"_id": ObjectId(id)}, {"password": 0})
     if not user_to_follow:
         return make_response(jsonify({"error": "User to follow not found"}), 404)
 
+    # Fetch the current user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    if id == str(user["_id"]):
+    if id == str(user["_id"]):  # Ensure users cannot follow themselves
         return make_response(jsonify({"error": "You cannot follow yourself"}), 400)
 
-    # Check if the user is already following
-    if id in user["following"]:
+    # Create follow data objects
+    following_data = {
+        "_id": id,
+        "username": user_to_follow["username"]
+    }
+    
+    follower_data = {
+        "_id": str(user["_id"]),
+        "username": username
+    }
+
+    # Check if already following
+    if any(f["username"] == user_to_follow["username"] for f in user.get("following", [])):
         return make_response(jsonify({"message": "Already following this user"}), 400)
-    # Add user to the following list of the current user and add the current user to the followers list of the other user
-    users.update_one({"_id": user["_id"]}, {"$push": {"following": user_to_follow["username"]}})
-    users.update_one({"_id": user_to_follow["_id"]}, {"$push": {"followers": user["username"]}})
+
+    # Update `following` for the current user
+    users.update_one({"_id": user["_id"]}, {"$push": {"following": following_data}})
+
+    # Update `followers` for the followed user
+    users.update_one({"_id": user_to_follow["_id"]}, {"$push": {"followers": follower_data}})
 
     return make_response(jsonify({"message": f"Successfully followed {user_to_follow['username']}"}), 200)
+
+
+
 
 @auth_bp.route('/api/v1.0/users/<string:id>/unfollow', methods=["POST"])
 @jwt_required
@@ -222,44 +243,108 @@ def user_feed():
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    following_ids = user.get("following", [])
-    if not following_ids:
+    following_list = user.get("following", [])
+    if not following_list:
         return make_response(jsonify({"message": "You are not following anyone."}), 200)
+
+    # Extract only the IDs from following list
+    following_ids = [ObjectId(f["_id"]) for f in following_list]
 
     # Create a list to hold the activities
     feed_activities = []
 
-    # Fetch activities (e.g., book reviews) for all users the current user is following
-    for followed_user_id in following_ids:
-        followed_user = users.find_one({"_id": ObjectId(followed_user_id)})
-        
-        if followed_user:
-            # Get recent reviews for the followed user
-            reviews_by_user = []
-            for book in books.find({"user_reviews.username": followed_user["username"]}):
-                for review in book.get("user_reviews", []):
-                    if review.get("username") == followed_user["username"]:
-                        review["_id"] = str(review["_id"])
-                        review["book_id"] = str(book["_id"])
-                        review["book_title"] = book["title"]
-                        reviews_by_user.append(review)
-            
-            # If there are any reviews by this user, add them to the feed
-            if reviews_by_user:
-                for review in reviews_by_user:
-                    feed_activities.append({
+    # Add the user's own activities to the feed
+    # Get recent reviews for the user
+    reviews_by_user = []
+    for book in books.find({"user_reviews.username": username}):
+        for review in book.get("user_reviews", []):
+            if review.get("username") == username:
+                reviews_by_user.append({
+                    "activity_type": "Review",
+                    "username": username,
+                    "book_title": book["title"],
+                    "review_content": review["comment"],
+                    "timestamp": review.get("created_at", str(datetime.now()))
+                })
+    
+    # Add the user's reviews to the feed
+    feed_activities.extend(reviews_by_user)
+
+    # Get current reading progress for the user's books in currently_reading
+    for book in user.get("currently_reading", []):
+        # Check if progress is 0 and modify message accordingly
+        progress = book.get('progress', 0)
+        progress_message = f"{progress}%"
+        if progress == 0:
+            feed_activities.append({
+                "activity_type": "Started Reading",
+                "username": "You",
+                "book_title": book.get("title", "Unknown Title"),
+                "progress": f"{book.get('progress', 0)}%",
+                "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
+                "timestamp": str(datetime.now())
+            })
+        else:
+            feed_activities.append({
+                "activity_type": "Reading Progress",
+                "username": "Your",
+                "book_title": book.get("title", "Unknown Title"),
+                "progress": f"{book.get('progress', 0)}%",
+                "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
+                "timestamp": str(datetime.now())
+            })
+
+    # Fetch activities (e.g., book reviews and reading progress) for all followed users
+    for followed_user in users.find({"_id": {"$in": following_ids}}):
+        followed_username = followed_user["username"]
+
+        # Get recent reviews for the followed user
+        reviews_by_user = []
+        for book in books.find({"user_reviews.username": followed_username}):
+            for review in book.get("user_reviews", []):
+                if review.get("username") == followed_username:
+                    reviews_by_user.append({
                         "activity_type": "Review",
-                        "username": followed_user["username"],
-                        "book_title": review["book_title"],
-                        "review_content": review["content"],
-                        "timestamp": review["created_at"] if "created_at" in review else str(datetime.now())
+                        "username": followed_username,
+                        "book_title": book["title"],
+                        "review_content": review["comment"],
+                        "timestamp": review.get("created_at", str(datetime.now()))
                     })
+
+        # Add reviews to the feed
+        feed_activities.extend(reviews_by_user)
+
+        # Get current reading progress for each book in currently_reading
+        for book in followed_user.get("currently_reading", []):
+            # Check if progress is 0 and modify message accordingly
+            progress = book.get('progress', 0)
+            progress_message = f"{progress}%"
+            if progress == 0:
+                feed_activities.append({
+                    "activity_type": "Started Reading",
+                    "username": followed_username,
+                    "book_title": book.get("title", "Unknown Title"),
+                    "progress": f"{book.get('progress', 0)}%",
+                    "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
+                    "timestamp": str(datetime.now())
+                })
+            else:
+                feed_activities.append({
+                    "activity_type": "Reading Progress",
+                    "username": followed_username,
+                    "book_title": book.get("title", "Unknown Title"),
+                    "progress": f"{book.get('progress', 0)}%",
+                    "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
+                    "timestamp": str(datetime.now())
+                })
 
     # Sort activities by timestamp in reverse order (most recent first)
     feed_activities = sorted(feed_activities, key=lambda x: x["timestamp"], reverse=True)
     
     # Return the combined feed activities
     return make_response(jsonify({"feed": feed_activities}), 200)
+
+
 
 @auth_bp.route('/api/v1.0/remove-all-followers', methods=["POST"])
 @jwt_required
@@ -342,6 +427,8 @@ def edit_profile():
         if users.find_one({"email": data["email"]}):
             return make_response(jsonify({"error": "Email already in use"}), 409)
         updates["email"] = data["email"]
+    if "pronouns" in data and data["pronouns"] != user["pronouns"]:
+        updates["pronouns"] = data["pronouns"]
     if "favourite_genres" in data:
         updates["favourite_genres"] = data["favourite_genres"]
     if "favourite_authors" in data:

@@ -42,11 +42,11 @@ for user in users.find():
                              #"favourite_books": [],
                              #"followers": [],
                              #"following": []
-                             #"pronouns": "",
+                             "pronouns": ""
                              #"have_read": [],
                              #"want_to_read": [],
                              #"currently_reading": [],
                              #"user_type": "",
-                             "profile_pic": ""                        
+                             #"profile_pic": ""                        
                              }
                      })    
