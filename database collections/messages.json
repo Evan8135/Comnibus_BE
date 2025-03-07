@@ -1,0 +1,178 @@
+[
+    {
+        "_id": {
+            "$oid": "67a60013004b38a906b21d86"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "pagemaster1 liked your review!",
+        "timestamp": {
+            "$date": "2025-02-07T12:44:03.311Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67aa3166436b82b698dccb78"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "pagemaster1 liked your review!",
+        "timestamp": {
+            "$date": "2025-02-10T17:03:34.342Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67af3b77eb62e531d8959ba3"
+        },
+        "recipient_name": "testuser1",
+        "content": "Dear Test User, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-02-14T12:47:51.299Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67af3cb2376599171399b344"
+        },
+        "recipient_name": "testuser2",
+        "content": "Dear Test User 2, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-02-14T12:53:06.567Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67b0b96d5e1d95f06b2bee77"
+        },
+        "recipient_name": "testuser3",
+        "content": "Dear Test User 3, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-02-15T15:57:33.592Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67b20b141c3e0db63b92b9a1"
+        },
+        "recipient_name": "testuser4",
+        "content": "Dear Test User 4, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-02-16T15:58:12.04Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67b85f4849972a1a69c9357e"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:4200/api/v1.0/books/67b85f4849972a1a69c9357d. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-21T11:11:04.219Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67b862131d3c90d7eaec69de"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:5000/api/v1.0/books/67b862131d3c90d7eaec69dd. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-21T11:22:59.4Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc77830d04025b4cc3663b"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:5000/api/v1.0/books/67bc77830d04025b4cc3663a. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-24T13:43:31.72Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc78520d04025b4cc3663d"
+        },
+        "recipient_name": "testuser4",
+        "content": "Dear Test User 4, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-02-24T13:46:58.399Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc7ed8d8a6b4db7989fba2"
+        },
+        "recipient_name": "testuser4",
+        "content": "Dear 'testuser4', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:5000/api/v1.0/books/67bc7ed8d8a6b4db7989fba1. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-24T14:14:48.021Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc80e4d8a6b4db7989fba5"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:5000/api/v1.0/books/67bc80e4d8a6b4db7989fba4. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-24T14:23:32.441Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc8238d8a6b4db7989fba8"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:5000/api/v1.0/books/67bc8238d8a6b4db7989fba7. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-24T14:29:12.24Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc83ced8a6b4db7989fbab"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'Dune' has been approved and added to our system. Here is the link to the book: http://localhost:5000/api/v1.0/books/67bc83ced8a6b4db7989fbaa. Thank you.",
+        "timestamp": {
+            "$date": "2025-02-24T14:35:58.138Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67bc9b214607f8dd49a0627f"
+        },
+        "recipient_name": "testuser5",
+        "content": "Dear Test User 5, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-02-24T16:15:29.647Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67c9b6fbe190825d21839543"
+        },
+        "recipient_name": "testuser5",
+        "content": "Dear Test User 5, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-03-06T14:53:47.503Z"
+        },
+        "is_read": false
+    }
+]
