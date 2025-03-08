@@ -28,8 +28,13 @@ def add_new_book_request():
     if not title or not author or not genres or not language:
         return make_response(jsonify({"error": "You missed a required field"}), 400)
 
-    # Process genres into a list (same way `signup` handles favourite_genres)
-    genres_list = genres.split(", ") if genres else []
+    # Ensure genres is a list
+    if isinstance(genres, str):
+        genres_list = [g.strip() for g in genres.split(",")]
+    elif isinstance(genres, list):
+        genres_list = [str(g).strip() for g in genres]
+    else:
+        genres_list = []
 
     new_request = {
         '_id': ObjectId(),
@@ -52,6 +57,7 @@ def add_new_book_request():
         "message": "Your book request has been submitted and will be reviewed by our admins",
         "url": request_link
     }), 201)
+
 
 @request_books_bp.route("/api/v1.0/requests", methods=["GET"])
 @jwt_required
@@ -89,19 +95,18 @@ def approve_book_request(id):
     if not book_request:
         return make_response(jsonify({"error": "Request not found"}), 404)
     
-    approved_book_data = request.get_json()
+    approved_book_data = request.form.to_dict()
     
+    # Helper function to parse comma-separated strings into a list
     def parse_comma_separated(value):
-        """Convert a comma-separated string into a list, handling spaces correctly."""
         if isinstance(value, str):
-            return [item.strip() for item in re.split(r",\s*", value) if item.strip()]
+            return [item.strip() for item in value.split(",") if item.strip()]
         return value if isinstance(value, list) else []
     
-    # Apply parsing to multiple fields
+    # Apply the parsing logic to the fields
     for field in ["genres", "characters", "triggers", "awards"]:
         if field in approved_book_data:
             approved_book_data[field] = parse_comma_separated(approved_book_data[field])
-
 
     approved_book_data.update({
         'title': book_request['title'],
@@ -113,27 +118,34 @@ def approve_book_request(id):
         'description': approved_book_data.get('description', ''),
         'user_reviews': [],
         'isbn': book_request['isbn'],
-        'characters': approved_book_data.get('characters', []),
-        'triggers': approved_book_data.get('triggers', []),
+        'characters': approved_book_data.get('characters', []),  # This is now guaranteed to be a list
+        'triggers': approved_book_data.get('triggers', []),  # This is now guaranteed to be a list
         'bookFormat': approved_book_data.get('bookFormat', ''),
         'edition': approved_book_data.get('edition', ''),
         'pages': approved_book_data.get('pages', 0),
         'publisher': approved_book_data.get('publisher', ''),
         'publishDate': book_request['publishDate'],
         'firstPublishDate': approved_book_data.get('firstPublishDate', ''),
-        'awards': approved_book_data.get('awards', []),
+        'awards': approved_book_data.get('awards', []),  # This is now guaranteed to be a list
         'coverImg': approved_book_data.get('coverImg', ''),
         'price': approved_book_data.get('price', 0.0)
     })
     
+    # Insert the approved book data into the books collection
     approved_book_id = books.insert_one(approved_book_data)
-    approved_book_link = f"http://localhost:5000/api/v1.0/books/{approved_book_id.inserted_id}"
+    approved_book_link = f"http://localhost:4200/api/v1.0/books/{approved_book_id.inserted_id}"
+
+    # Send notification
     send_message(
         recipient_name=book_request['username'],
         content=f"Dear '{book_request['username']}', your request for '{book_request['title']}' has been approved and added to our system. Here is the link to the book: {approved_book_link}. Thank you."
     )
+
+    # Delete the book request from the requests collection
     requests.delete_one({'_id': ObjectId(id)})
+
     return make_response(jsonify({"message": "Request has been approved", "url": approved_book_link}), 201)
+
 
 @request_books_bp.route("/api/v1.0/requests/<string:id>/reject", methods=["POST"])
 @jwt_required
@@ -143,7 +155,7 @@ def reject_book_request(id):
     if not book_request:
         return make_response(jsonify({"error": "Request not found"}), 404)
     
-    recipient_name = book_request['username']
+    recipient_name = book_request.get['username']
     title = book_request['title']
     
     send_message(
