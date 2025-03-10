@@ -10,23 +10,41 @@ reviews_bp = Blueprint("reviews_bp", __name__)
 users = globals.db.users
 books = globals.db.books
 
+
 @reviews_bp.route("/api/v1.0/books/<string:id>/reviews", methods=["POST"])
 @jwt_required
 def add_new_review(id):
     token_data = request.token_data
     username = token_data['username']  # USERNAME FROM LOGIN IS FILLED IN AUTOMATICALLY
 
+    # Check if the user has already reviewed this book
+    existing_review = books.find_one(
+        {"_id": ObjectId(id), "user_reviews.username": username}
+    )
+    if existing_review:
+        return make_response(jsonify({"error": "You have already reviewed this book."}), 400)
+
+    # Validate the input data
+    title = request.form.get('title')
+    comment = request.form.get('comment')
+    stars = request.form.get('stars')
+
+    if not title or not comment or not stars:
+        return make_response(jsonify({"error": "Title, comment, and stars are required."}), 400)
+    
+    
+
     added_review = {
         '_id': ObjectId(),
         'username': username,
-        #'name': request.form['name'],
-        'title': request.form['title'],  # Add title to the review
-        'comment': request.form['comment'],
-        'stars': float(request.form['stars']),
+        'title': title,
+        'comment': comment,
+        'stars': stars,
         'likes': 0,  # Initialize likes count
         'dislikes': 0  # Initialize dislikes count
     }
 
+    # Add the review to the book's user_reviews array
     books.update_one(
         {"_id": ObjectId(id)},
         {"$push": {"user_reviews": added_review}}
@@ -36,8 +54,10 @@ def add_new_review(id):
     user_score = user_score_aggregation(id)
     books.update_one({"_id": ObjectId(id)}, {"$set": {"user_score": user_score}})
 
-    new_review_link = "http://localhost:5000/api/v1.0/books/" + id + "/reviews/" + str(added_review['_id'])
+    # Return the URL for the new review
+    new_review_link = f"http://localhost:5000/api/v1.0/books/{id}/reviews/{str(added_review['_id'])}"
     return make_response(jsonify({"url": new_review_link}), 201)
+
 
 @reviews_bp.route("/api/v1.0/books/<string:id>/reviews", methods=["GET"])
 def show_all_reviews(id):

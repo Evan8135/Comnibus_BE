@@ -36,11 +36,18 @@ def add_new_book_request():
     else:
         genres_list = []
 
+    if isinstance(author, str):
+        author_list = [a.strip() for a in author.split(",")]
+    elif isinstance(genres, list):
+        author_list = [str(a).strip() for a in author]
+    else:
+        author_list = []
+
     new_request = {
         '_id': ObjectId(),
         'title': title,
         'series': series,
-        'author': author,
+        'author': author_list,
         'genres': genres_list,
         'publishDate': publish_date,
         'language': language,
@@ -104,7 +111,7 @@ def approve_book_request(id):
         return value if isinstance(value, list) else []
     
     # Apply the parsing logic to the fields
-    for field in ["genres", "characters", "triggers", "awards"]:
+    for field in ["author", "genres", "characters", "triggers", "awards"]:
         if field in approved_book_data:
             approved_book_data[field] = parse_comma_separated(approved_book_data[field])
 
@@ -114,7 +121,7 @@ def approve_book_request(id):
         'genres': approved_book_data['genres'],
         'language': book_request['language'],
         'series': book_request['series'],
-        'user_score': approved_book_data.get('user_score', 0),
+        'user_score': int(approved_book_data.get('user_score', 0)),
         'description': approved_book_data.get('description', ''),
         'user_reviews': [],
         'isbn': book_request['isbn'],
@@ -122,13 +129,13 @@ def approve_book_request(id):
         'triggers': approved_book_data.get('triggers', []),  # This is now guaranteed to be a list
         'bookFormat': approved_book_data.get('bookFormat', ''),
         'edition': approved_book_data.get('edition', ''),
-        'pages': approved_book_data.get('pages', 0),
+        'pages': int(approved_book_data.get('pages', 0)),
         'publisher': approved_book_data.get('publisher', ''),
         'publishDate': book_request['publishDate'],
         'firstPublishDate': approved_book_data.get('firstPublishDate', ''),
         'awards': approved_book_data.get('awards', []),  # This is now guaranteed to be a list
         'coverImg': approved_book_data.get('coverImg', ''),
-        'price': approved_book_data.get('price', 0.0)
+        'price': int(approved_book_data.get('price', 0.0))
     })
     
     # Insert the approved book data into the books collection

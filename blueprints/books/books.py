@@ -120,43 +120,28 @@ def edit_book(id):
     
     return make_response(jsonify(updated_book), 200)
 
-@books_bp.route("/api/v1.0/books/<string:id>/trigger-warnings", methods=["POST"])
+@books_bp.route("/api/v1.0/books/<string:id>/add-trigger", methods=["POST"])
 @jwt_required
 @admin_required
 def add_trigger_warnings(id):
-    # Parse the request JSON
-    request_data = request.get_json()
-    if not request_data or "triggers" not in request_data:
-        return make_response(jsonify({"error": "No trigger warnings provided"}), 400)
+    token_data = request.token_data
+    username = token_data['username']  # USERNAME FROM LOGIN IS FILLED IN AUTOMATICALLY
+
+    added_trigger = {
+        '_id': ObjectId(),
+        'submitted by': username,
+        'trigger_name': request.form['trigger_name'],  # Add title to the review
+        'explanation': request.form['explanation']
+    }
+
+    books.update_one(
+        {"_id": ObjectId(id)},
+        {"$push": {"triggers": added_trigger}}
+    )
+
     
-    triggers = request_data["triggers"]
-    if not isinstance(triggers, list):
-        return make_response(jsonify({"error": "Triggers must be a list"}), 400)
-    
-    # Ensure the book exists
-    book = books.find_one({'_id': ObjectId(id)})
-    if not book:
-        return make_response(jsonify({"error": "Invalid Book ID"}), 404)
-    
-    # Ensure each trigger is a dictionary with required fields
-    formatted_triggers = []
-    for trigger in triggers:
-        if isinstance(trigger, dict) and "trigger_name" in trigger and "explanation" in trigger:
-            formatted_triggers.append({
-                "trigger_name": trigger["trigger_name"],
-                "explanation": trigger["explanation"]
-            })
-        else:
-            return make_response(jsonify({"error": "Each trigger must be a dictionary with 'name' and 'explanation' fields"}), 400)
-    
-    # Update the book's trigger warnings
-    books.update_one({'_id': ObjectId(id)}, {'$set': {'triggers': formatted_triggers}})
-    
-    # Fetch the updated book
-    updated_book = books.find_one({'_id': ObjectId(id)})
-    updated_book['_id'] = str(updated_book['_id'])
-    
-    return make_response(jsonify(updated_book), 200)
+    new_review_link = "http://localhost:5000/api/v1.0/books/" + id + "/triggers/" + str(added_trigger['_id'])
+    return make_response(jsonify({"url": new_review_link}), 201)
 
 
 
