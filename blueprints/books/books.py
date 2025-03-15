@@ -127,21 +127,32 @@ def add_trigger_warnings(id):
     token_data = request.token_data
     username = token_data['username']  # USERNAME FROM LOGIN IS FILLED IN AUTOMATICALLY
 
-    added_trigger = {
-        '_id': ObjectId(),
-        'submitted by': username,
-        'trigger_name': request.form['trigger_name'],  # Add title to the review
-        'explanation': request.form['explanation']
-    }
+
+    # Validate the input data
+    triggers = request.form.get('triggers')
+
+    if isinstance(triggers, str):
+        trigger_list = [t.strip() for t in triggers.split(",")]
+    elif isinstance(triggers, list):
+        trigger_list = [str(t).strip() for t in triggers]
+    else:
+        trigger_list = []
+
+    #if not trigger_name or not explanation:
+    #    return make_response(jsonify({"error": "Not filled in properly"}), 400)
+    
+    
+
+    trigger_warning = {'triggers': trigger_list}
 
     books.update_one(
         {"_id": ObjectId(id)},
-        {"$push": {"triggers": added_trigger}}
+        {"$push": {"triggers": trigger_warning}}
     )
 
     
-    new_review_link = "http://localhost:5000/api/v1.0/books/" + id + "/triggers/" + str(added_trigger['_id'])
-    return make_response(jsonify({"url": new_review_link}), 201)
+    # Return the URL for the new review
+    return make_response(jsonify({"trigger added"}), 201)
 
 
 

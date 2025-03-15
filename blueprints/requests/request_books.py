@@ -38,7 +38,7 @@ def add_new_book_request():
 
     if isinstance(author, str):
         author_list = [a.strip() for a in author.split(",")]
-    elif isinstance(genres, list):
+    elif isinstance(author, list):
         author_list = [str(a).strip() for a in author]
     else:
         author_list = []
