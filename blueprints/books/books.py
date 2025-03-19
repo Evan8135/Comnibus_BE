@@ -10,6 +10,8 @@ users = globals.db.users
 books = globals.db.books
 
 # BOOK APIS
+#------------------------------------------------------------------------------------------------------------------
+# 1. BASIC CRUD FEATURES
 @books_bp.route("/api/v1.0/books", methods=['GET'])
 def show_all_books():
     page_num, page_size = 1, 10
@@ -94,6 +96,94 @@ def show_one_book(id):
 
     return make_response(jsonify(response_data), 200)
 
+@books_bp.route("/api/v1.0/add-book", methods=["POST"])
+@jwt_required
+@admin_required
+def add_book():
+    title = request.form.get("title")
+    series = request.form.get("series", "")
+    author = request.form.get("author")
+    description = request.form.get("description")
+    language = request.form.get("language")
+    isbn = request.form.get("isbn")
+    genres = request.form.getlist("genres")
+    characters = request.form.getlist("characters", [])
+    triggers = request.form.getlist("triggers", [])
+    book_format = request.form.get("bookFormat")
+    edition = request.form.get("edition", "")
+    pages = int(request.form.get("pages", 0))
+    publisher = request.form.get("publisher", "")
+    publish_date = request.form.get("publishDate")
+    first_publish_date = request.form.get("firstPublishDate")
+    awards = request.form.getlist("awards", [])
+    cover_img = request.form.get("coverImg")
+    price = int(request.form.get("price", 0))
+    
+    if not title or not author:
+        return make_response(jsonify({"error": "Title and Author are required fields"}), 400)
+    
+    if isinstance(genres, str):
+        genres_list = [g.strip() for g in genres.split(",")]
+    elif isinstance(genres, list):
+        genres_list = [str(g).strip() for g in genres]
+    else:
+        genres_list = []
+
+    if isinstance(author, str):
+        author_list = [a.strip() for a in author.split(",")]
+    elif isinstance(author, list):
+        author_list = [str(a).strip() for a in author]
+    else:
+        author_list = []
+    
+    if isinstance(triggers, str):
+        triggers_list = [t.strip() for t in triggers.split(",")]
+    elif isinstance(triggers, list):
+        triggers_list = [str(t).strip() for t in triggers]
+    else:
+        triggers_list = []
+
+    if isinstance(characters, str):
+        character_list = [c.strip() for c in characters.split(",")]
+    elif isinstance(characters, list):
+        character_list = [str(c).strip() for c in characters]
+    else:
+        character_list = []
+
+    if isinstance(awards, str):
+        award_list = [a.strip() for a in awards.split(",")]
+    elif isinstance(awards, list):
+        award_list = [str(a).strip() for a in awards]
+    else:
+        award_list = []
+
+    book_data = {
+        "title": title,
+        "series": series,
+        "author": author_list,
+        "user_score": 0,
+        "user_reviews": [],
+        "description": description,
+        "language": language,
+        "isbn": isbn,
+        "genres": genres_list,
+        "characters": character_list,
+        "triggers": triggers_list,
+        "bookFormat": book_format,
+        "edition": edition,
+        "pages": pages,
+        "publisher": publisher,
+        "publishDate": publish_date,
+        "firstPublishDate": first_publish_date,
+        "awards": award_list,
+        "coverImg": cover_img,
+        "price": price
+    }
+    
+    inserted_book = books.insert_one(book_data)
+    return make_response(jsonify({"message": "Book added successfully", "book_id": str(inserted_book.inserted_id)}), 201)
+
+
 @books_bp.route("/api/v1.0/books/<string:id>", methods=["PUT"])
 @jwt_required
 @admin_required
@@ -120,6 +210,18 @@ def edit_book(id):
     
     return make_response(jsonify(updated_book), 200)
 
+@books_bp.route("/api/v1.0/books/<string:id>", methods=["DELETE"])
+@jwt_required
+@admin_required
+def delete_books(id):
+    result = books.delete_one({"_id":ObjectId(id)})
+    if result.deleted_count == 1:
+        return make_response(jsonify({}), 204)
+    else:
+        return make_response(jsonify({"error": "Invalid request ID"}), 404)
+
+#------------------------------------------------------------------------------------------------------------------
+# 2. TRIGGER WARNINGS
 @books_bp.route("/api/v1.0/books/<string:id>/add-trigger", methods=["POST"])
 @jwt_required
 @admin_required
@@ -156,6 +258,8 @@ def add_trigger_warnings(id):
 
 
 
+#------------------------------------------------------------------------------------------------------------------
+# 3. RECOMMENDATION ALGORITHM
 @books_bp.route("/api/v1.0/recommendations", methods=["GET"])
 @jwt_required
 def get_recommendations():
@@ -237,7 +341,8 @@ def get_recommendations():
 
 
 
-
+#------------------------------------------------------------------------------------------------------------------
+# 4. BOOKSHELVES
 @books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["POST"])
 @jwt_required
 def have_read_book(id):
@@ -536,12 +641,3 @@ def get_all_favourite_reads():
     return make_response(jsonify({"favourite_books": user.get("favourite_books", [])}), 200)
 
 
-@books_bp.route("/api/v1.0/books/<string:id>", methods=["DELETE"])
-@jwt_required
-@admin_required
-def delete_books(id):
-    result = books.delete_one({"_id":ObjectId(id)})
-    if result.deleted_count == 1:
-        return make_response(jsonify({}), 204)
-    else:
-        return make_response(jsonify({"error": "Invalid request ID"}), 404)
