@@ -1,1 +1,453 @@
-[{"_id":{"$oid":"678e43a3edd22bc69a94c67e"},"name":"Page Master","username":"pagemaster1","password":{"$binary":{"base64":"JDJiJDEyJGRqQmkuUnJLcUM2SlR6UXZNelFHQU9mZ2ppaUhIeHNkWWFUeUxFd0N4OUlncXFuYVk3U3hL","subType":"00"}},"email":"evan8135@gmail.com","admin":true,"favourite_authors":[""],"favourite_books":[],"favourite_genres":[""],"followers":[],"following":[{"_id":"67af3b77eb62e531d8959ba2","username":"testuser1"}],"pronouns":"he/him","currently_reading":[{"_id":"67cf14681615080dd41f7743","title":"Devils","coverImg":"https://i.imgur.com/fsuIzIl.jpeg","author":["Fyodor Dostoevsky","Constance Garnett (Translator)"],"genres":["Fiction","Russia","Russian Literature","Classic Literature","Literature","Philosophy","Classics","Novels","19th Century","Politics"],"reading_time":{"$date":"2025-03-20T13:51:34.771Z"},"total_pages":705,"current_page":286,"progress":41.0}],"have_read":[{"_id":"67d596d4561a597dcc4e0eb6","title":"Ten Days that Shook the World","coverImg":"https://i.imgur.com/8OWV6cv.jpeg","author":["John Reed"],"genres":["History","Nonfiction","Russia","Russian History","Politics","Journalism","Classics","War","Soviet Union"],"stars":3.5},{"_id":"67d99f556437a08bc3e305f4","title":"The Road","coverImg":"https://i.imgur.com/OmBbEpr.jpeg","author":["Cormac McCarthy"],"genres":["Fiction","Science Fiction","Dystopia","Post Apocalyptic","Horror","Literature","Novels","Audiobook","Apocalyptic","Contemporary"],"stars":5.0}],"user_type":"","want_to_read":[{"_id":"677d535a2f00c2c42ea6be1b","title":"Batman: Knightfall, Vol. 1","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1335301972l/12623655.jpg","author":["Chuck Dixon (Goodreads Author)","Doug Moench","Jim Aparo (Penciller)","Graham Nolan (Penciller)","Adrienne Roy (Colorist)","John Constanza (Letterer)"],"genres":["Comics","Graphic Novels","Batman","Dc Comics","Comic Book","Graphic Novels Comics","Superheroes","Fiction","Crime","Fantasy"]}],"profile_pic":"https://i.imgur.com/XetdBkq.jpeg"},{"_id":{"$oid":"67af3b77eb62e531d8959ba2"},"name":"Test User","username":"testuser1","email":"testuser@gmail.com","password":{"$binary":{"base64":"JDJiJDEyJFFDMFgycEU4NWNPU1Z5UmwuMGRERXU0Tmo2VDRkTWZBQ3FjOGRFbkMzbWhyZEd1TUpCZFou","subType":"00"}},"user_type":"reader","favourite_genres":["Fiction","Science Fiction","Hard Science Fiction"],"favourite_authors":["Philip K. Dick"],"favourite_books":[],"followers":[{"_id":"67c9b6fbe190825d21839542","username":"testuser5"},{"_id":"678e43a3edd22bc69a94c67e","username":"pagemaster1"}],"following":[{"_id":"67c9b6fbe190825d21839542","username":"testuser5"}],"have_read":[{"_id":"677d535a2f00c2c42ea6b705","title":"The Dream Master","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1391150384l/61992.jpg","author":["Roger Zelazny"],"genres":["Science Fiction","Fantasy","Fiction","Science Fiction Fantasy","Speculative Fiction","Novels","Psychology","Classics","20th Century","American"],"stars":3.5},{"_id":"677d535a2f00c2c42ea6b93e","title":"The Doors of His Face, the Lamps of His Mouth","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1422062944l/13824.jpg","author":["Roger Zelazny"],"genres":["Science Fiction","Fantasy","Short Stories","Fiction","Science Fiction Fantasy","Anthologies","Collections","Speculative Fiction","Short Story Collection","Literature"],"stars":4.0},{"_id":"677d535a2f00c2c42ea6b6fc","title":"The Rescue","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388260971l/9573401.jpg","author":["Erin Hunter","James L. Barry (Illustrations)","Dan Jolley (Goodreads Author)"],"genres":["Manga","Fantasy","Graphic Novels","Animals","Comics","Cats","Childrens","Middle Grade","Fiction","Young Adult"],"stars":3.0}],"want_to_read":[],"currently_reading":[],"admin":"false","suspension_end_date":null,"profile_pic":"https://i.imgur.com/PNjOHzz.jpeg","pronouns":"prefer not to say"},{"_id":{"$oid":"67b0b96d5e1d95f06b2bee76"},"name":"Test User 3","username":"testuser3","email":"testuser3@gmail.com","password":{"$binary":{"base64":"JDJiJDEyJEE1b2drRGUyelNYanBXbUczbHhOQXVNY2l4MXAyYUJWT3NsVTBWclcvS0d2Y3FCZVdzVVVh","subType":"00"}},"user_type":"reader","favourite_genres":["Childrens","Fantasy","Classics"],"favourite_authors":["Enid Blyton"],"favourite_books":[],"followers":[],"following":[],"have_read":[{"id":"677d535a2f00c2c42ea6b6fc","title":"The Rescue","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388260971l/9573401.jpg","author":["Erin Hunter","James L. Barry (Illustrations)","Dan Jolley (Goodreads Author)"],"genres":["Manga","Fantasy","Graphic Novels","Animals","Comics","Cats","Childrens","Middle Grade","Fiction","Young Adult"],"stars":0.0}],"want_to_read":[{"id":"677d535a2f00c2c42ea6b6fa","title":"Heren van de thee","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1253449218l/5505098.jpg","author":["Hella S. Haasse"],"genres":["Fiction","Dutch Literature","Literature","Historical Fiction","Asia","Roman","20th Century","Classics","Historical","Novels"]}],"currently_reading":[],"admin":"false","suspension_end_date":null,"profile_pic":"https://i.imgur.com/ckWLMb4.jpeg","pronouns":""},{"_id":{"$oid":"67bc78520d04025b4cc3663c"},"name":"Test User 4","username":"testuser4","email":"testuser4@gmail.com","password":{"$binary":{"base64":"JDJiJDEyJDdDd2J0OFcxUmdJL0lnblBOdFNmL3VmZGlmNkFNNC8uMUZuNW1YR1pMcE8ySGdHOHBFSXEu","subType":"00"}},"user_type":"reader","favourite_genres":["Ireland","Religion","Philosophy","Nonfiction","Education","Science"],"favourite_authors":[""],"favourite_books":[],"profile_pic":"https://i.imgur.com/D4Sq4ng.jpeg","followers":[],"following":[],"have_read":[],"want_to_read":[],"currently_reading":[],"admin":"false","suspension_end_date":null,"pronouns":"prefer not to say"},{"_id":{"$oid":"67c9b6fbe190825d21839542"},"name":"Test User 5","username":"testuser5","email":"testuser5@gmail.com","password":{"$binary":{"base64":"JDJiJDEyJFJkNkZZMXZEMUJaZG4xNFhYVi5GS2VGejZ6QjN5QlRVQ1NPRW9Pc051dVYvUXpmZTBMN0tH","subType":"00"}},"user_type":"reader","favourite_genres":["12th Century","14th Century","15th Century","2nd Grade","Africa","African American","African American Literature"],"favourite_authors":[""],"favourite_books":[{"_id":"677d535a2f00c2c42ea6b83a","title":"Sphinx's Princess","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1442553866l/6135633._SY475_.jpg","author":["Esther M. Friesner"],"genres":["Historical Fiction","Young Adult","Historical","Mythology","Fantasy","Egypt","Romance","Fiction","Teen","Africa"],"pages":370}],"profile_pic":"https://i.imgur.com/gX7yGg7.jpeg","followers":[{"_id":"67af3b77eb62e531d8959ba2","username":"testuser1"}],"following":[{"_id":"67af3b77eb62e531d8959ba2","username":"testuser1"}],"have_read":[],"want_to_read":[],"currently_reading":[{"_id":"677d535a2f00c2c42ea6b714","title":"Our Sister Killjoy","coverImg":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1389938563l/231558.jpg","author":["Ama Ata Aidoo"],"genres":["Fiction","Poetry","Africa","Ghana","African Literature","Literature","Feminism","School","Womens","Contemporary"],"total_pages":134,"current_page":50,"progress":37.0}],"admin":"false","suspension_end_date":null,"pronouns":"she/her"}]
+[
+    {
+        "_id": {
+            "$oid": "678e43a3edd22bc69a94c67e"
+        },
+        "name": "Page Master",
+        "username": "pagemaster1",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJGRqQmkuUnJLcUM2SlR6UXZNelFHQU9mZ2ppaUhIeHNkWWFUeUxFd0N4OUlncXFuYVk3U3hL",
+                "subType": "00"
+            }
+        },
+        "email": "evan8135@gmail.com",
+        "admin": true,
+        "favourite_authors": [
+            ""
+        ],
+        "favourite_books": [],
+        "favourite_genres": [
+            ""
+        ],
+        "followers": [],
+        "following": [
+            {
+                "_id": "67af3b77eb62e531d8959ba2",
+                "username": "testuser1"
+            }
+        ],
+        "pronouns": "he/him",
+        "currently_reading": [
+            {
+                "_id": "67cf14681615080dd41f7743",
+                "title": "Devils",
+                "coverImg": "https://i.imgur.com/fsuIzIl.jpeg",
+                "author": [
+                    "Fyodor Dostoevsky",
+                    "Constance Garnett (Translator)"
+                ],
+                "genres": [
+                    "Fiction",
+                    "Russia",
+                    "Russian Literature",
+                    "Classic Literature",
+                    "Literature",
+                    "Philosophy",
+                    "Classics",
+                    "Novels",
+                    "19th Century",
+                    "Politics"
+                ],
+                "reading_time": {
+                    "$date": "2025-03-20T13:51:34.771Z"
+                },
+                "total_pages": 705,
+                "current_page": 286,
+                "progress": 41.0
+            }
+        ],
+        "have_read": [
+            {
+                "_id": "67d596d4561a597dcc4e0eb6",
+                "title": "Ten Days that Shook the World",
+                "coverImg": "https://i.imgur.com/8OWV6cv.jpeg",
+                "author": [
+                    "John Reed"
+                ],
+                "genres": [
+                    "History",
+                    "Nonfiction",
+                    "Russia",
+                    "Russian History",
+                    "Politics",
+                    "Journalism",
+                    "Classics",
+                    "War",
+                    "Soviet Union"
+                ],
+                "stars": 3.5
+            },
+            {
+                "_id": "67d99f556437a08bc3e305f4",
+                "title": "The Road",
+                "coverImg": "https://i.imgur.com/OmBbEpr.jpeg",
+                "author": [
+                    "Cormac McCarthy"
+                ],
+                "genres": [
+                    "Fiction",
+                    "Science Fiction",
+                    "Dystopia",
+                    "Post Apocalyptic",
+                    "Horror",
+                    "Literature",
+                    "Novels",
+                    "Audiobook",
+                    "Apocalyptic",
+                    "Contemporary"
+                ],
+                "stars": 5.0
+            }
+        ],
+        "user_type": "",
+        "want_to_read": [
+            {
+                "_id": "677d535a2f00c2c42ea6be1b",
+                "title": "Batman: Knightfall, Vol. 1",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1335301972l/12623655.jpg",
+                "author": [
+                    "Chuck Dixon (Goodreads Author)",
+                    "Doug Moench",
+                    "Jim Aparo (Penciller)",
+                    "Graham Nolan (Penciller)",
+                    "Adrienne Roy (Colorist)",
+                    "John Constanza (Letterer)"
+                ],
+                "genres": [
+                    "Comics",
+                    "Graphic Novels",
+                    "Batman",
+                    "Dc Comics",
+                    "Comic Book",
+                    "Graphic Novels Comics",
+                    "Superheroes",
+                    "Fiction",
+                    "Crime",
+                    "Fantasy"
+                ]
+            }
+        ],
+        "profile_pic": "https://i.imgur.com/XetdBkq.jpeg"
+    },
+    {
+        "_id": {
+            "$oid": "67af3b77eb62e531d8959ba2"
+        },
+        "name": "Test User",
+        "username": "testuser1",
+        "email": "testuser@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJFFDMFgycEU4NWNPU1Z5UmwuMGRERXU0Tmo2VDRkTWZBQ3FjOGRFbkMzbWhyZEd1TUpCZFou",
+                "subType": "00"
+            }
+        },
+        "user_type": "reader",
+        "favourite_genres": [
+            "Fiction",
+            "Science Fiction",
+            "Hard Science Fiction"
+        ],
+        "favourite_authors": [
+            "Philip K. Dick"
+        ],
+        "favourite_books": [],
+        "followers": [
+            {
+                "_id": "67c9b6fbe190825d21839542",
+                "username": "testuser5"
+            },
+            {
+                "_id": "678e43a3edd22bc69a94c67e",
+                "username": "pagemaster1"
+            }
+        ],
+        "following": [
+            {
+                "_id": "67c9b6fbe190825d21839542",
+                "username": "testuser5"
+            }
+        ],
+        "have_read": [
+            {
+                "_id": "677d535a2f00c2c42ea6b705",
+                "title": "The Dream Master",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1391150384l/61992.jpg",
+                "author": [
+                    "Roger Zelazny"
+                ],
+                "genres": [
+                    "Science Fiction",
+                    "Fantasy",
+                    "Fiction",
+                    "Science Fiction Fantasy",
+                    "Speculative Fiction",
+                    "Novels",
+                    "Psychology",
+                    "Classics",
+                    "20th Century",
+                    "American"
+                ],
+                "stars": 3.5
+            },
+            {
+                "_id": "677d535a2f00c2c42ea6b93e",
+                "title": "The Doors of His Face, the Lamps of His Mouth",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1422062944l/13824.jpg",
+                "author": [
+                    "Roger Zelazny"
+                ],
+                "genres": [
+                    "Science Fiction",
+                    "Fantasy",
+                    "Short Stories",
+                    "Fiction",
+                    "Science Fiction Fantasy",
+                    "Anthologies",
+                    "Collections",
+                    "Speculative Fiction",
+                    "Short Story Collection",
+                    "Literature"
+                ],
+                "stars": 4.0
+            },
+            {
+                "_id": "677d535a2f00c2c42ea6b6fc",
+                "title": "The Rescue",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388260971l/9573401.jpg",
+                "author": [
+                    "Erin Hunter",
+                    "James L. Barry (Illustrations)",
+                    "Dan Jolley (Goodreads Author)"
+                ],
+                "genres": [
+                    "Manga",
+                    "Fantasy",
+                    "Graphic Novels",
+                    "Animals",
+                    "Comics",
+                    "Cats",
+                    "Childrens",
+                    "Middle Grade",
+                    "Fiction",
+                    "Young Adult"
+                ],
+                "stars": 3.0
+            }
+        ],
+        "want_to_read": [],
+        "currently_reading": [],
+        "admin": "false",
+        "suspension_end_date": null,
+        "profile_pic": "https://i.imgur.com/PNjOHzz.jpeg",
+        "pronouns": "prefer not to say"
+    },
+    {
+        "_id": {
+            "$oid": "67b0b96d5e1d95f06b2bee76"
+        },
+        "name": "Test User 3",
+        "username": "testuser3",
+        "email": "testuser3@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJEE1b2drRGUyelNYanBXbUczbHhOQXVNY2l4MXAyYUJWT3NsVTBWclcvS0d2Y3FCZVdzVVVh",
+                "subType": "00"
+            }
+        },
+        "user_type": "reader",
+        "favourite_genres": [
+            "Childrens",
+            "Fantasy",
+            "Classics"
+        ],
+        "favourite_authors": [
+            "Enid Blyton"
+        ],
+        "favourite_books": [],
+        "followers": [],
+        "following": [],
+        "have_read": [
+            {
+                "id": "677d535a2f00c2c42ea6b6fc",
+                "title": "The Rescue",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388260971l/9573401.jpg",
+                "author": [
+                    "Erin Hunter",
+                    "James L. Barry (Illustrations)",
+                    "Dan Jolley (Goodreads Author)"
+                ],
+                "genres": [
+                    "Manga",
+                    "Fantasy",
+                    "Graphic Novels",
+                    "Animals",
+                    "Comics",
+                    "Cats",
+                    "Childrens",
+                    "Middle Grade",
+                    "Fiction",
+                    "Young Adult"
+                ],
+                "stars": 0.0
+            }
+        ],
+        "want_to_read": [
+            {
+                "id": "677d535a2f00c2c42ea6b6fa",
+                "title": "Heren van de thee",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1253449218l/5505098.jpg",
+                "author": [
+                    "Hella S. Haasse"
+                ],
+                "genres": [
+                    "Fiction",
+                    "Dutch Literature",
+                    "Literature",
+                    "Historical Fiction",
+                    "Asia",
+                    "Roman",
+                    "20th Century",
+                    "Classics",
+                    "Historical",
+                    "Novels"
+                ]
+            }
+        ],
+        "currently_reading": [],
+        "admin": "false",
+        "suspension_end_date": null,
+        "profile_pic": "https://i.imgur.com/ckWLMb4.jpeg",
+        "pronouns": ""
+    },
+    {
+        "_id": {
+            "$oid": "67bc78520d04025b4cc3663c"
+        },
+        "name": "Test User 4",
+        "username": "testuser4",
+        "email": "testuser4@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJDdDd2J0OFcxUmdJL0lnblBOdFNmL3VmZGlmNkFNNC8uMUZuNW1YR1pMcE8ySGdHOHBFSXEu",
+                "subType": "00"
+            }
+        },
+        "user_type": "reader",
+        "favourite_genres": [
+            "Ireland",
+            "Religion",
+            "Philosophy",
+            "Nonfiction",
+            "Education",
+            "Science"
+        ],
+        "favourite_authors": [
+            ""
+        ],
+        "favourite_books": [],
+        "profile_pic": "https://i.imgur.com/D4Sq4ng.jpeg",
+        "followers": [],
+        "following": [],
+        "have_read": [],
+        "want_to_read": [],
+        "currently_reading": [],
+        "admin": "false",
+        "suspension_end_date": null,
+        "pronouns": "prefer not to say"
+    },
+    {
+        "_id": {
+            "$oid": "67c9b6fbe190825d21839542"
+        },
+        "name": "Test User 5",
+        "username": "testuser5",
+        "email": "testuser5@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJFJkNkZZMXZEMUJaZG4xNFhYVi5GS2VGejZ6QjN5QlRVQ1NPRW9Pc051dVYvUXpmZTBMN0tH",
+                "subType": "00"
+            }
+        },
+        "user_type": "reader",
+        "favourite_genres": [
+            "12th Century",
+            "14th Century",
+            "15th Century",
+            "2nd Grade",
+            "Africa",
+            "African American",
+            "African American Literature"
+        ],
+        "favourite_authors": [
+            ""
+        ],
+        "favourite_books": [
+            {
+                "_id": "677d535a2f00c2c42ea6b83a",
+                "title": "Sphinx's Princess",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1442553866l/6135633._SY475_.jpg",
+                "author": [
+                    "Esther M. Friesner"
+                ],
+                "genres": [
+                    "Historical Fiction",
+                    "Young Adult",
+                    "Historical",
+                    "Mythology",
+                    "Fantasy",
+                    "Egypt",
+                    "Romance",
+                    "Fiction",
+                    "Teen",
+                    "Africa"
+                ],
+                "pages": 370
+            }
+        ],
+        "profile_pic": "https://i.imgur.com/gX7yGg7.jpeg",
+        "followers": [
+            {
+                "_id": "67af3b77eb62e531d8959ba2",
+                "username": "testuser1"
+            }
+        ],
+        "following": [
+            {
+                "_id": "67af3b77eb62e531d8959ba2",
+                "username": "testuser1"
+            }
+        ],
+        "have_read": [],
+        "want_to_read": [],
+        "currently_reading": [
+            {
+                "_id": "677d535a2f00c2c42ea6b714",
+                "title": "Our Sister Killjoy",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1389938563l/231558.jpg",
+                "author": [
+                    "Ama Ata Aidoo"
+                ],
+                "genres": [
+                    "Fiction",
+                    "Poetry",
+                    "Africa",
+                    "Ghana",
+                    "African Literature",
+                    "Literature",
+                    "Feminism",
+                    "School",
+                    "Womens",
+                    "Contemporary"
+                ],
+                "total_pages": 134,
+                "current_page": 50,
+                "progress": 37.0
+            }
+        ],
+        "admin": "false",
+        "suspension_end_date": null,
+        "pronouns": "she/her"
+    }
+]
