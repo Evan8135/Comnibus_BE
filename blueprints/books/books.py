@@ -1,7 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, redirect, url_for
 from bson import ObjectId
 from bson.regex import Regex
-from decorators import jwt_required, admin_required
+from datetime import datetime
+from decorators import jwt_required, admin_required, author_required
 from aggregation import user_progress_aggregation
 import globals
 
@@ -18,6 +19,7 @@ def show_all_books():
     title_filter = request.args.get('title')
     author_filter = request.args.get('author')
     genre_filter = request.args.get('genres')
+    character_filter = request.args.get('characters')
 
     if request.args.get('pn'):
         page_num = int(request.args.get('pn'))
@@ -32,6 +34,8 @@ def show_all_books():
         query["author"] = {"$regex": Regex(author_filter, 'i')}
     if genre_filter:
         query["genres"] = {"$regex": Regex(genre_filter, 'i')}
+    if character_filter:
+        query["characters"] = {"$regex": Regex(character_filter, 'i')}
 
     all_book_data = []
     for book in books.find(query).skip(page_start).limit(page_size):
@@ -275,7 +279,6 @@ def get_recommendations():
     # Get the user's favorite genres and authors
     fav_genres = user.get("favourite_genres", [])
     fav_authors = user.get("favourite_authors", [])
-    have_read = user.get("have_read")
 
     page = int(request.args.get('page', 1))
     page_size = int(request.args.get('page_size', 10))
@@ -336,13 +339,70 @@ def get_recommendations():
         "recommended_books": recommended_books,
         "favorite_genres": fav_genres,
         "favorite_authors": fav_authors,
-        "have_read": have_read
+        "have_read": rated_books
     }), 200)
 
 
+#------------------------------------------------------------------------------------------------------------------
+# 4. TOP RATED BOOKS
+@books_bp.route("/api/v1.0/top-books", methods=['GET'])
+def show_high_rated_books():
+    page_num, page_size = 1, 10
+    title_filter = request.args.get('title')
+    author_filter = request.args.get('author')
+    genre_filter = request.args.get('genres')
+    character_filter = request.args.get('characters')
+
+    if request.args.get('pn'):
+        page_num = int(request.args.get('pn'))
+    if request.args.get('ps'):
+        page_size = int(request.args.get('ps'))
+    page_start = (page_size * (page_num - 1))
+
+    query = {"user_score": {"$gt": 3.5}}  # Filter for user_score greater than 3.5
+    if title_filter:
+        query["title"] = {"$regex": Regex(title_filter, 'i')}
+    if author_filter:
+        query["author"] = {"$regex": Regex(author_filter, 'i')}
+    if genre_filter:
+        query["genres"] = {"$regex": Regex(genre_filter, 'i')}
+    if character_filter:
+        query["characters"] = {"$regex": Regex(character_filter, 'i')}
+
+    all_book_data = []
+    for book in books.find(query).skip(page_start).limit(page_size):
+        book['_id'] = str(book['_id'])
+        book_info = {
+            "_id": book['_id'],
+            "title": book['title'],
+            "series": book['series'],
+            "author": book['author'],
+            "user_score": book['user_score'],
+            "description": book['description'],
+            "user_reviews": book['user_reviews'],
+            "language": book['language'],
+            "isbn": book['isbn'],
+            "genres": book['genres'],
+            "characters": book['characters'],
+            "triggers": book['triggers'],
+            "bookFormat": book['bookFormat'],
+            "edition": book['edition'],
+            "pages": book['pages'],
+            "publisher": book['publisher'],
+            "publishDate": book['publishDate'],
+            "firstPublishDate": book['firstPublishDate'],
+            "awards": book['awards'],
+            "coverImg": book['coverImg'],
+            "price": book['price']
+        }
+        for review in book['user_reviews']:
+            review['_id'] = str(review['_id'])
+        all_book_data.append(book_info)
+    return make_response(jsonify(all_book_data), 200)
+
 
 #------------------------------------------------------------------------------------------------------------------
-# 4. BOOKSHELVES
+# 5. BOOKSHELVES
 @books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["POST"])
 @jwt_required
 def have_read_book(id):
@@ -466,12 +526,15 @@ def start_to_read_book(id):
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
     
+    current_time = datetime.utcnow()
+
     book_data = {
         "_id": id,
         "title": book.get("title"),
         "coverImg": book.get("coverImg"),
         "author": book.get("author"),
         "genres": book.get("genres"),
+        "reading_time": current_time,
         "total_pages": book.get("pages"),
         "current_page": 0,
         "progress": 0
@@ -556,7 +619,7 @@ def update_reading_progress(book_id):
     # Update the current page in the user's currently reading list
     users.update_one(
         {"_id": user["_id"], "currently_reading._id": book_id},
-        {"$set": {"currently_reading.$.current_page": new_page}}
+        {"$set": {"currently_reading.$.current_page": new_page, "currently_reading.$.reading_time": datetime.now()}}
     )
     
     # Recalculate progress
@@ -641,3 +704,92 @@ def get_all_favourite_reads():
     return make_response(jsonify({"favourite_books": user.get("favourite_books", [])}), 200)
 
 
+@books_bp.route("/api/v1.0/publish-book", methods=["POST"])
+@jwt_required
+@author_required
+def publish_book():
+    token_data = request.token_data
+    username = token_data["username"]
+
+    # Find user and get their preferences
+    user = users.find_one({"username": username}, {"password": 0})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    
+
+    title = request.form.get("title")
+    series = request.form.get("series", "")
+    author = user.get("name")
+    description = request.form.get("description")
+    language = request.form.get("language")
+    isbn = request.form.get("isbn")
+    genres = request.form.getlist("genres")
+    characters = request.form.getlist("characters", [])
+    triggers = request.form.getlist("triggers", [])
+    book_format = request.form.get("bookFormat")
+    edition = request.form.get("edition", "")
+    pages = int(request.form.get("pages", 0))
+    publisher = request.form.get("publisher", "")
+    publish_date = request.form.get("publishDate")
+    first_publish_date = request.form.get("firstPublishDate")
+    awards = request.form.getlist("awards", [])
+    cover_img = request.form.get("coverImg")
+    price = int(request.form.get("price", 0))
+    
+    if not title or not author:
+        return make_response(jsonify({"error": "Title and Author are required fields"}), 400)
+    
+    if isinstance(genres, str):
+        genres_list = [g.strip() for g in genres.split(",")]
+    elif isinstance(genres, list):
+        genres_list = [str(g).strip() for g in genres]
+    else:
+        genres_list = []
+    
+    if isinstance(triggers, str):
+        triggers_list = [t.strip() for t in triggers.split(",")]
+    elif isinstance(triggers, list):
+        triggers_list = [str(t).strip() for t in triggers]
+    else:
+        triggers_list = []
+
+    if isinstance(characters, str):
+        character_list = [c.strip() for c in characters.split(",")]
+    elif isinstance(characters, list):
+        character_list = [str(c).strip() for c in characters]
+    else:
+        character_list = []
+
+    if isinstance(awards, str):
+        award_list = [a.strip() for a in awards.split(",")]
+    elif isinstance(awards, list):
+        award_list = [str(a).strip() for a in awards]
+    else:
+        award_list = []
+
+    book_data = {
+        "title": title,
+        "series": series,
+        "author": author,
+        "user_score": 0,
+        "user_reviews": [],
+        "description": description,
+        "language": language,
+        "isbn": isbn,
+        "genres": genres_list,
+        "characters": character_list,
+        "triggers": triggers_list,
+        "bookFormat": book_format,
+        "edition": edition,
+        "pages": pages,
+        "publisher": publisher,
+        "publishDate": publish_date,
+        "firstPublishDate": first_publish_date,
+        "awards": award_list,
+        "coverImg": cover_img,
+        "price": price
+    }
+    
+    inserted_book = books.insert_one(book_data)
+    return make_response(jsonify({"message": "Book successfully published", "book_id": str(inserted_book.inserted_id)}), 201)

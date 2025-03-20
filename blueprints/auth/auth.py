@@ -238,7 +238,7 @@ def user_feed():
     token_data = request.token_data
     username = token_data['username']
     
-    # Fetch the user document to get the list of users they are following
+    # Fetch the user document
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
@@ -247,102 +247,82 @@ def user_feed():
     if not following_list:
         return make_response(jsonify({"message": "You are not following anyone."}), 200)
 
-    # Extract only the IDs from following list
     following_ids = [ObjectId(f["_id"]) for f in following_list]
-
-    # Create a list to hold the activities
     feed_activities = []
 
-    # Add the user's own activities to the feed
-    # Get recent reviews for the user
+    # Helper function to parse timestamps correctly
+    def parse_timestamp(ts):
+        if isinstance(ts, str):
+            try:
+                return datetime.fromisoformat(ts)
+            except ValueError:
+                return datetime.min  # Default to the oldest possible if parsing fails
+        return ts if isinstance(ts, datetime) else datetime.min
+
+
+    # Add the logged-in user's activities to the feed
     reviews_by_user = []
     for book in books.find({"user_reviews.username": username}):
         for review in book.get("user_reviews", []):
             if review.get("username") == username:
                 reviews_by_user.append({
-                    "activity_type": "Review",
-                    "username": username,
+                    "activity_type": "Reviewed",
+                    "username": "You",
                     "book_title": book["title"],
                     "review_content": review["comment"],
-                    "timestamp": review.get("created_at", str(datetime.now()))
+                    "timestamp": review.get("created_at", datetime.now().isoformat())
                 })
-    
-    # Add the user's reviews to the feed
+
     feed_activities.extend(reviews_by_user)
 
-    # Get current reading progress for the user's books in currently_reading
+    # Add the user's reading progress to the feed
     for book in user.get("currently_reading", []):
-        # Check if progress is 0 and modify message accordingly
         progress = book.get('progress', 0)
-        progress_message = f"{progress}%"
-        if progress == 0:
-            feed_activities.append({
-                "activity_type": "Started Reading",
-                "username": "You",
-                "book_title": book.get("title", "Unknown Title"),
-                "progress": f"{book.get('progress', 0)}%",
-                "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
-                "timestamp": str(datetime.now())
-            })
-        else:
-            feed_activities.append({
-                "activity_type": "Reading Progress",
-                "username": "Your",
-                "book_title": book.get("title", "Unknown Title"),
-                "progress": f"{book.get('progress', 0)}%",
-                "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
-                "timestamp": str(datetime.now())
-            })
+        activity = {
+            "activity_type": "Started Reading" if progress == 0 else "Reading Progress",
+            "username": "You",
+            "book_title": book.get("title", "Unknown Title"),
+            "progress": f"{progress}%",
+            "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
+            "timestamp": book.get("reading_time", datetime.now().isoformat())
+        }
+        feed_activities.append(activity)
 
-    # Fetch activities (e.g., book reviews and reading progress) for all followed users
+    # Add activities for each followed user
     for followed_user in users.find({"_id": {"$in": following_ids}}):
         followed_username = followed_user["username"]
 
-        # Get recent reviews for the followed user
-        reviews_by_user = []
+        # Get recent reviews for followed user
         for book in books.find({"user_reviews.username": followed_username}):
             for review in book.get("user_reviews", []):
                 if review.get("username") == followed_username:
-                    reviews_by_user.append({
+                    feed_activities.append({
                         "activity_type": "Review",
                         "username": followed_username,
                         "book_title": book["title"],
                         "review_content": review["comment"],
-                        "timestamp": review.get("created_at", str(datetime.now()))
+                        "timestamp": review.get("created_at", datetime.now())
                     })
 
-        # Add reviews to the feed
-        feed_activities.extend(reviews_by_user)
-
-        # Get current reading progress for each book in currently_reading
+        # Add reading progress for followed user
         for book in followed_user.get("currently_reading", []):
-            # Check if progress is 0 and modify message accordingly
             progress = book.get('progress', 0)
-            progress_message = f"{progress}%"
-            if progress == 0:
-                feed_activities.append({
-                    "activity_type": "Started Reading",
-                    "username": followed_username,
-                    "book_title": book.get("title", "Unknown Title"),
-                    "progress": f"{book.get('progress', 0)}%",
-                    "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
-                    "timestamp": str(datetime.now())
-                })
-            else:
-                feed_activities.append({
-                    "activity_type": "Reading Progress",
-                    "username": followed_username,
-                    "book_title": book.get("title", "Unknown Title"),
-                    "progress": f"{book.get('progress', 0)}%",
-                    "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
-                    "timestamp": str(datetime.now())
-                })
+            activity = {
+                "activity_type": "Started Reading" if progress == 0 else "Reading Progress",
+                "username": followed_username,
+                "book_title": book.get("title", "Unknown Title"),
+                "progress": f"{progress}%",
+                "current_page": f"{book.get('current_page', 0)} / {book.get('total_pages', 0)}",
+                "timestamp": book.get("reading_time", datetime.now().isoformat())
+            }
+            feed_activities.append(activity)
 
-    # Sort activities by timestamp in reverse order (most recent first)
-    feed_activities = sorted(feed_activities, key=lambda x: x["timestamp"], reverse=True)
-    
+    # Sort all activities by timestamp in reverse order (most recent first)
+    feed_activities.sort(key=lambda x: parse_timestamp(x["timestamp"]), reverse=True)
+
     # Return the combined feed activities
     return make_response(jsonify({"feed": feed_activities}), 200)
+
 
 
 
