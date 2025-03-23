@@ -1,5 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify
 from bson import ObjectId
+from datetime import datetime
 from decorators import jwt_required, admin_required
 import globals
 from blueprints.messages.messages import send_message
@@ -29,6 +30,7 @@ def post_thought():
         'comment': comment,
         'likes': 0,  # Initialize likes count
         'dislikes': 0,  # Initialize dislikes count
+        'created_at': datetime.utcnow(),
         'replies': []
     }
 
@@ -56,6 +58,7 @@ def show_all_thoughts():
             "comment": thought['comment'],
             "likes": thought['likes'],
             "dislikes": thought['dislikes'],
+            'created_at': thought['created_at'],
             "replies": thought['replies']
         }
         all_thoughts.append(thought_info)
@@ -77,24 +80,21 @@ def like_thought(id):
     token_data = request.token_data
     liker_username = token_data['username']
 
+    thought = thoughts.find_one({"_id": ObjectId(id)})
+    if not thought:
+        return make_response(jsonify({"error": "Thought not found"}), 404)
+
+    # Increment likes
     result = thoughts.update_one(
         {"_id": ObjectId(id)},
-        {"$inc": {"thoughts.$.likes": 1}}
+        {"$inc": {"likes": 1}}
     )
 
     if result.matched_count == 0:
         return make_response(jsonify({"error": "Invalid thought ID"}), 400)
 
-    thought = thoughts.find_one(
-        {"_id": ObjectId(id)},
-        {"thoughts.$": 1}
-    )
-
-    if not thought:
-        return make_response(jsonify({"error": "thought not found"}), 404)
-
-
     recipient_username = thought.get("username")
+    print("Recipient username:", recipient_username)  # Debugging log
 
     if recipient_username:
         send_message(
@@ -111,24 +111,21 @@ def dislike_thought(id):
     token_data = request.token_data
     disliker_username = token_data['username']
 
+    thought = thoughts.find_one({"_id": ObjectId(id)})
+    if not thought:
+        return make_response(jsonify({"error": "Thought not found"}), 404)
+
+    # Increment dislikes
     result = thoughts.update_one(
         {"_id": ObjectId(id)},
-        {"$inc": {"thoughts.$.dislikes": 1}}
+        {"$inc": {"dislikes": 1}}
     )
 
     if result.matched_count == 0:
         return make_response(jsonify({"error": "Invalid thought ID"}), 400)
 
-    thought = thoughts.find_one(
-        {"_id": ObjectId(id)},
-        {"thoughts.$": 1}
-    )
-
-    if not thought:
-        return make_response(jsonify({"error": "thought not found"}), 404)
-
-
     recipient_username = thought.get("username")
+    print("Recipient username:", recipient_username)  # Debugging log
 
     if recipient_username:
         send_message(
@@ -148,15 +145,42 @@ def delete_all_thoughts():
         return make_response(jsonify({"message": f"{result.deleted_count} thoughts deleted successfully."}), 200)
     else:
         return make_response(jsonify({"error": "No thoughts found to delete."}), 404)
+    
+@thoughts_bp.route("/api/v1.0/thoughts/<string:id>", methods=["DELETE"]) 
+@jwt_required
+def delete_thought(id):
+    token_data = request.token_data
+    current_user = token_data['username']
+    admin = token_data.get('admin', False)
+
+    # Find the book and the specific review to delete
+    thought = thoughts.find_one(
+        {"_id": ObjectId(id)}
+    )
+
+    if not thought:
+        return make_response(jsonify({"error": "Thought not found"}), 404)
+
+
+    thought_username = thought.get("username")
+
+    # Check if the user is authorized to delete the review
+    if not admin and thought_username != current_user:
+        return make_response(jsonify({"error": "Unauthorized to delete this thought"}), 403)
+
+    result = thoughts.delete_one({"_id":ObjectId(id)})
+    if result.deleted_count == 1:
+        return make_response(jsonify({}), 204)
+    else:
+        return make_response(jsonify({"error": "Invalid request ID"}), 404)
+
+
 
 @thoughts_bp.route("/api/v1.0/thoughts/<string:id>/replies", methods=["POST"])
 @jwt_required
 def reply_to_thought(id):
     token_data = request.token_data
     username = token_data['username']  # USERNAME FROM LOGIN IS FILLED IN AUTOMATICALLY
-
-
-
 
     # Validate the input data
     content = request.form.get('content')
@@ -167,9 +191,10 @@ def reply_to_thought(id):
     
 
     added_reply = {
-        '_id': ObjectId(),
+        '_id': str(ObjectId()),
         'username': username,
         'content': content,
+        'created_at': datetime.utcnow(),
         'likes': 0,  # Initialize likes count
         'dislikes': 0  # Initialize dislikes count
     }
@@ -183,7 +208,7 @@ def reply_to_thought(id):
 
 
     # Return the URL for the new reply
-    new_reply_link = f"http://localhost:5000/api/v1.0/thoughts/{id}/replies/{str(added_reply['_id'])}"
+    new_reply_link = "http://localhost:5000/api/v1.0/thoughts/" + id + "/replies/" + (added_reply['_id'])
     return make_response(jsonify({"url": new_reply_link}), 201)
 
 

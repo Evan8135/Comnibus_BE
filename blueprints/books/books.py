@@ -408,6 +408,7 @@ def show_high_rated_books():
 def have_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
+    date_read = request.form.get('date_read')
 
     # Find the user
     user = users.find_one({"username": username})
@@ -418,6 +419,8 @@ def have_read_book(id):
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
+    
+    
 
     # Retrieve 'stars' from form data
     if "stars" not in request.form:
@@ -429,6 +432,11 @@ def have_read_book(id):
             return make_response(jsonify({"error": "Stars must be between 0 and 5"}), 400)
     except ValueError:
         return make_response(jsonify({"error": "Invalid rating format"}), 400)
+    
+    if not date_read:
+        return make_response(jsonify({"error": "Missing 'date_read' field"}), 400)
+    
+    
 
     # Prepare book data
     book_data = {
@@ -437,7 +445,8 @@ def have_read_book(id):
         "coverImg": book.get("coverImg"),
         "author": book.get("author"),
         "genres": book.get("genres"),
-        "stars": stars
+        "stars": stars,
+        "date_read": date_read
     }
 
     # Check if the book is already marked as read

@@ -12,6 +12,7 @@ auth_bp = Blueprint("auth_bp", __name__)
 blacklist = globals.db.blacklist
 users = globals.db.users
 books = globals.db.books
+thoughts = globals.db.thoughts
 banned_emails = globals.db.banned_emails
 
 @auth_bp.route('/api/v1.0/signup', methods=["POST"])
@@ -275,6 +276,32 @@ def user_feed():
 
     feed_activities.extend(reviews_by_user)
 
+    thoughts_by_user = []
+    for thought in thoughts.find({"username": username}):
+        if thought.get("username") == username:
+            thoughts_by_user.append({
+                "activity_type": "Posted a Thought",
+                "username": "You",
+                "thought_content": thought["comment"],
+                "timestamp": thought.get("created_at", datetime.now().isoformat())
+            })
+
+    feed_activities.extend(thoughts_by_user)
+
+    replies_by_user = []
+    for thought in thoughts.find({"replies.username": username}):
+        for reply in thought.get("replies", []):
+            if reply.get("username") == username:
+                replies_by_user.append({
+                    "activity_type": "Replied to",
+                    "username": "You",
+                    "thought_user": thought["username"],
+                    "reply_content": reply["content"],
+                    "timestamp": reply.get("created_at", datetime.now().isoformat())
+                })
+
+    feed_activities.extend(replies_by_user)
+
     # Add the user's reading progress to the feed
     for book in user.get("currently_reading", []):
         progress = book.get('progress', 0)
@@ -303,6 +330,27 @@ def user_feed():
                         "review_content": review["comment"],
                         "timestamp": review.get("created_at", datetime.now())
                     })
+        
+        for thought in thoughts.find({"username": followed_username}):
+            if thought.get("username") == username:
+                thoughts_by_user.append({
+                    "activity_type": "Posted a Thought",
+                    "username": followed_username,
+                    "thought_content": thought["comment"],
+                    "timestamp": thought.get("created_at", datetime.now().isoformat())
+                })
+
+        for thought in thoughts.find({"replies.username": followed_username}):
+            for reply in thought.get("replies", []):
+                if reply.get("username") == followed_username:
+                    feed_activities.append({
+                        "activity_type": "Replied to",
+                        "username": followed_username,
+                        "thought_user": thought["username"],
+                        "reply_content": reply["content"],
+                        "timestamp": reply.get("created_at", datetime.now())
+                    })
+
 
         # Add reading progress for followed user
         for book in followed_user.get("currently_reading", []):
@@ -376,6 +424,8 @@ def show_profile():
     token_data = request.token_data
     username = token_data['username']
     user = users.find_one({"username": username}, {"password": 0})
+
+    
     if user:
         user["_id"] = str(user["_id"])
         return make_response(jsonify(user), 200)
