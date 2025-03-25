@@ -111,21 +111,22 @@ def add_book():
     language = request.form.get("language")
     isbn = request.form.get("isbn")
     genres = request.form.getlist("genres")
-    characters = request.form.getlist("characters", [])
-    triggers = request.form.getlist("triggers", [])
+    characters = request.form.getlist("characters")  # List of characters
+    triggers = request.form.getlist("triggers")  # List of triggers
     book_format = request.form.get("bookFormat")
     edition = request.form.get("edition", "")
     pages = int(request.form.get("pages", 0))
     publisher = request.form.get("publisher", "")
     publish_date = request.form.get("publishDate")
     first_publish_date = request.form.get("firstPublishDate")
-    awards = request.form.getlist("awards", [])
+    awards = request.form.getlist("awards")  # List of awards
     cover_img = request.form.get("coverImg")
     price = int(request.form.get("price", 0))
     
     if not title or not author:
         return make_response(jsonify({"error": "Title and Author are required fields"}), 400)
-    
+
+    # Handle genres as a list of strings
     if isinstance(genres, str):
         genres_list = [g.strip() for g in genres.split(",")]
     elif isinstance(genres, list):
@@ -133,33 +134,18 @@ def add_book():
     else:
         genres_list = []
 
+    # Handle authors as a list of strings
     if isinstance(author, str):
         author_list = [a.strip() for a in author.split(",")]
     elif isinstance(author, list):
         author_list = [str(a).strip() for a in author]
     else:
         author_list = []
-    
-    if isinstance(triggers, str):
-        triggers_list = [t.strip() for t in triggers.split(",")]
-    elif isinstance(triggers, list):
-        triggers_list = [str(t).strip() for t in triggers]
-    else:
-        triggers_list = []
 
-    if isinstance(characters, str):
-        character_list = [c.strip() for c in characters.split(",")]
-    elif isinstance(characters, list):
-        character_list = [str(c).strip() for c in characters]
-    else:
-        character_list = []
-
-    if isinstance(awards, str):
-        award_list = [a.strip() for a in awards.split(",")]
-    elif isinstance(awards, list):
-        award_list = [str(a).strip() for a in awards]
-    else:
-        award_list = []
+    # Handle triggers, characters, and awards as lists
+    triggers_list = [t.strip() for t in triggers] if isinstance(triggers, list) else []
+    characters_list = [c.strip() for c in characters] if isinstance(characters, list) else []
+    award_list = [a.strip() for a in awards] if isinstance(awards, list) else []
 
     book_data = {
         "title": title,
@@ -171,7 +157,7 @@ def add_book():
         "language": language,
         "isbn": isbn,
         "genres": genres_list,
-        "characters": character_list,
+        "characters": characters_list,
         "triggers": triggers_list,
         "bookFormat": book_format,
         "edition": edition,
@@ -183,9 +169,10 @@ def add_book():
         "coverImg": cover_img,
         "price": price
     }
-    
+
     inserted_book = books.insert_one(book_data)
     return make_response(jsonify({"message": "Book added successfully", "book_id": str(inserted_book.inserted_id)}), 201)
+
 
 
 @books_bp.route("/api/v1.0/books/<string:id>", methods=["PUT"])
@@ -223,43 +210,6 @@ def delete_books(id):
         return make_response(jsonify({}), 204)
     else:
         return make_response(jsonify({"error": "Invalid request ID"}), 404)
-
-#------------------------------------------------------------------------------------------------------------------
-# 2. TRIGGER WARNINGS
-@books_bp.route("/api/v1.0/books/<string:id>/add-trigger", methods=["POST"])
-@jwt_required
-@admin_required
-def add_trigger_warnings(id):
-    token_data = request.token_data
-    username = token_data['username']  # USERNAME FROM LOGIN IS FILLED IN AUTOMATICALLY
-
-
-    # Validate the input data
-    triggers = request.form.get('triggers')
-
-    if isinstance(triggers, str):
-        trigger_list = [t.strip() for t in triggers.split(",")]
-    elif isinstance(triggers, list):
-        trigger_list = [str(t).strip() for t in triggers]
-    else:
-        trigger_list = []
-
-    #if not trigger_name or not explanation:
-    #    return make_response(jsonify({"error": "Not filled in properly"}), 400)
-    
-    
-
-    trigger_warning = {'triggers': trigger_list}
-
-    books.update_one(
-        {"_id": ObjectId(id)},
-        {"$push": {"triggers": trigger_warning}}
-    )
-
-    
-    # Return the URL for the new review
-    return make_response(jsonify({"trigger added"}), 201)
-
 
 
 #------------------------------------------------------------------------------------------------------------------
@@ -299,17 +249,17 @@ def get_recommendations():
 
     # Query for books based on genres
     if fav_genres:
-        genre_books = list(books.find(genre_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(50))
+        genre_books = list(books.find(genre_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(100))
         recommended_books.extend(genre_books)
 
     # Query for books based on authors
     if fav_authors:
-        author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(15))
+        author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(50))
         recommended_books.extend(author_books)
 
     rated_books = user.get("have_read", [])
     for rated_book in rated_books:
-        if rated_book["stars"] > 2.5:  # Only if rated above half a star
+        if rated_book["stars"] > 3.5:  # Only if rated above half a star
             # Check if the author is in an array of authors, hence using `$in` operator
             same_author_books = list(books.find({
                 "author": {"$in": [rated_book["author"]]},  # Check if the rated book's author is in the author array
@@ -458,8 +408,92 @@ def have_read_book(id):
 
     return make_response(jsonify({"message": "Book added to have_read list"}), 200)
 
+@books_bp.route("/api/v1.0/have-read", methods=["GET"])
+@jwt_required
+def get_all_have_read_books():
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"have_read": 1})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+    return make_response(jsonify({"have_read": user.get("have_read", [])}), 200)
+
+@books_bp.route("/api/v1.0/have-read/<string:book_id>", methods=["GET"])
+@jwt_required
+def get_have_read_book(book_id):
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"have_read": 1})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+    book = next((b for b in user.get("have_read", []) if b["_id"] == book_id), None)
+    if not book:
+        return make_response(jsonify({"error": "Book not found in have read list"}), 404)
+    return make_response(jsonify({"book": book}), 200)
 
 
+@books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["PUT"])
+@jwt_required
+def edit_have_read_book(id):
+    token_data = request.token_data
+    username = token_data["username"]
+
+    # Find the user
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Find the book in the user's "have_read" list
+    book_index = next((i for i, b in enumerate(user.get("have_read", [])) if b["_id"] == id), None)
+    if book_index is None:
+        return make_response(jsonify({"error": "Book not found in have read list"}), 404)
+
+    # Get JSON data from request
+    data = request.get_json()
+    updates = {}
+
+    if "stars" in data:
+        try:
+            stars = float(data["stars"])
+            if stars < 0 or stars > 5:
+                return make_response(jsonify({"error": "Stars must be between 0 and 5"}), 400)
+            updates["stars"] = stars
+        except ValueError:
+            return make_response(jsonify({"error": "Invalid rating format"}), 400)
+
+    if "date_read" in data:
+        updates["date_read"] = data["date_read"]
+
+    # If no valid updates, return an error
+    if not updates:
+        return make_response(jsonify({"error": "No valid fields to update"}), 400)
+
+    # Update the specific book in the user's "have_read" list
+    users.update_one(
+        {"_id": user["_id"], f"have_read.{book_index}._id": id},
+        {"$set": {f"have_read.{book_index}.{key}": value for key, value in updates.items()}}
+    )
+
+    return make_response(jsonify({"message": "Book details updated successfully"}), 200)
+
+
+@books_bp.route('/api/v1.0/remove-all-have-read', methods=["POST"])
+@jwt_required
+def remove_all_have_read_books():
+    token_data = request.token_data
+    username = token_data['username']
+
+    # Retrieve the user from the database
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Remove all followers from the user's followers list
+    users.update_one({"_id": user["_id"]}, {"$set": {"have_read": []}})
+
+    
+
+    return make_response(jsonify({"message": "All books removed successfully"}), 200)
 
 @books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["DELETE"])
 @jwt_required

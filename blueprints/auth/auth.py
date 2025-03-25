@@ -269,7 +269,9 @@ def user_feed():
                 reviews_by_user.append({
                     "activity_type": "Reviewed",
                     "username": "You",
+                    "book_id": str(book["_id"]),
                     "book_title": book["title"],
+                    "review_id": str(review["_id"]),
                     "review_content": review["comment"],
                     "timestamp": review.get("created_at", datetime.now().isoformat())
                 })
@@ -324,9 +326,11 @@ def user_feed():
             for review in book.get("user_reviews", []):
                 if review.get("username") == followed_username:
                     feed_activities.append({
-                        "activity_type": "Review",
+                        "activity_type": "Reviewed",
                         "username": followed_username,
+                        "book_id": str(book["_id"]),
                         "book_title": book["title"],
+                        "review_id": str(review["_id"]),
                         "review_content": review["comment"],
                         "timestamp": review.get("created_at", datetime.now())
                     })

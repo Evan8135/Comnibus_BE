@@ -3,6 +3,7 @@ from blueprints.books.books import books_bp
 from blueprints.requests.request_books import request_books_bp
 from blueprints.genres.genres import genres_bp
 from blueprints.authors.authors import authors_bp
+from blueprints.triggers.triggers import triggers_bp
 from blueprints.reviews.reviews import reviews_bp
 from blueprints.auth.auth import auth_bp
 from blueprints.messages.messages import messages_bp
@@ -17,6 +18,7 @@ app.register_blueprint(books_bp)
 app.register_blueprint(request_books_bp)
 app.register_blueprint(genres_bp)
 app.register_blueprint(authors_bp)
+app.register_blueprint(triggers_bp)
 app.register_blueprint(reviews_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(messages_bp)

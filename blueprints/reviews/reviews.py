@@ -101,18 +101,24 @@ def show_all_reviews(id):
 
     return make_response(jsonify(all_reviews), 200)
 
-@reviews_bp.route("/api/v1.0/books/<string:book_id>/reviews/<string:review_id>", methods=["GET"])
-def get_one_review(book_id, review_id):
+@reviews_bp.route("/api/v1.0/review/<string:review_id>", methods=["GET"])
+def get_one_review(review_id):
     book = books.find_one(
-        {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id)},
-        {"_id": 0, "user_reviews.$": 1}
+        {"user_reviews._id": ObjectId(review_id)},
+        {"_id": 1, "user_reviews.$": 1}  # Include book _id in the result
     )
 
     if book is None:
         return make_response(jsonify({"error": "Invalid Review ID"}), 400)
 
-    book['user_reviews'][0]['_id'] = str(book['user_reviews'][0]['_id'])
-    return make_response(jsonify(book["user_reviews"][0]), 200)
+    # Extract review and add book_id to the response
+    review = book["user_reviews"][0]
+    review["_id"] = str(review["_id"])  # Convert review ID to string
+    review["book_id"] = str(book["_id"])  # Convert book ID to string
+
+    return make_response(jsonify(review), 200)
+
+
 
 
 
