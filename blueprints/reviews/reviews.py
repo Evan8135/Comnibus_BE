@@ -11,6 +11,7 @@ reviews_bp = Blueprint("reviews_bp", __name__)
 users = globals.db.users
 books = globals.db.books
 MAX_REVIEWS_PER_WEEK = 3
+MIN_ACCOUNT_AGE_DAYS = 5
 
 @reviews_bp.route("/api/v1.0/books/<string:id>/reviews", methods=["POST"])
 @jwt_required
@@ -21,6 +22,14 @@ def add_new_review(id):
     # Get the current date and the start of the week
     current_time = datetime.utcnow()
     start_of_week = current_time - timedelta(days=current_time.weekday())  # Monday of the current week
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found."}), 400)
+    
+    account_creation_date = user.get("created_at")
+    if (current_time - account_creation_date).days < MIN_ACCOUNT_AGE_DAYS:
+        return make_response(jsonify({"error": f"Your account must be at least 5 days old to post reviews."}), 400)
 
     # Find reviews posted by the user in the current week
     reviews_by_user = []

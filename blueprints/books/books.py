@@ -102,51 +102,47 @@ def show_one_book(id):
 
 @books_bp.route("/api/v1.0/add-book", methods=["POST"])
 @jwt_required
+@author_required
 @admin_required
 def add_book():
+    # Helper function to parse comma-separated values into a list
+    def parse_comma_separated(value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value if isinstance(value, list) else []
+
+    # Get form data
     title = request.form.get("title")
     series = request.form.get("series", "")
     author = request.form.get("author")
     description = request.form.get("description")
     language = request.form.get("language")
     isbn = request.form.get("isbn")
-    genres = request.form.getlist("genres")
-    characters = request.form.getlist("characters")  # List of characters
-    triggers = request.form.getlist("triggers")  # List of triggers
+    genres = request.form.get("genres")
+    characters = request.form.get("characters")
+    triggers = request.form.get("triggers")
     book_format = request.form.get("bookFormat")
     edition = request.form.get("edition", "")
     pages = int(request.form.get("pages", 0))
     publisher = request.form.get("publisher", "")
     publish_date = request.form.get("publishDate")
     first_publish_date = request.form.get("firstPublishDate")
-    awards = request.form.getlist("awards")  # List of awards
+    awards = request.form.get("awards")
     cover_img = request.form.get("coverImg")
-    price = int(request.form.get("price", 0))
-    
+    price = float(request.form.get("price", 0.0))
+
+    # Ensure required fields are present
     if not title or not author:
         return make_response(jsonify({"error": "Title and Author are required fields"}), 400)
 
-    # Handle genres as a list of strings
-    if isinstance(genres, str):
-        genres_list = [g.strip() for g in genres.split(",")]
-    elif isinstance(genres, list):
-        genres_list = [str(g).strip() for g in genres]
-    else:
-        genres_list = []
+    # Apply the parsing logic to the fields (genres, author, characters, triggers, awards)
+    genres_list = parse_comma_separated(genres)
+    author_list = parse_comma_separated(author)
+    characters_list = parse_comma_separated(characters)
+    triggers_list = parse_comma_separated(triggers)
+    award_list = parse_comma_separated(awards)
 
-    # Handle authors as a list of strings
-    if isinstance(author, str):
-        author_list = [a.strip() for a in author.split(",")]
-    elif isinstance(author, list):
-        author_list = [str(a).strip() for a in author]
-    else:
-        author_list = []
-
-    # Handle triggers, characters, and awards as lists
-    triggers_list = [t.strip() for t in triggers] if isinstance(triggers, list) else []
-    characters_list = [c.strip() for c in characters] if isinstance(characters, list) else []
-    award_list = [a.strip() for a in awards] if isinstance(awards, list) else []
-
+    # Book data structure to insert into DB
     book_data = {
         "title": title,
         "series": series,
@@ -170,8 +166,11 @@ def add_book():
         "price": price
     }
 
+    # Insert the book into the database
     inserted_book = books.insert_one(book_data)
+    
     return make_response(jsonify({"message": "Book added successfully", "book_id": str(inserted_book.inserted_id)}), 201)
+
 
 
 
@@ -204,8 +203,27 @@ def edit_book(id):
 @books_bp.route("/api/v1.0/books/<string:id>", methods=["DELETE"])
 @jwt_required
 @admin_required
+@author_required
 def delete_books(id):
+    token_data = request.token_data
+    admin = token_data.get('admin', False)
+    name = token_data.get('name')
+
+    book = books.find_one(
+        {"_id": ObjectId(id)}
+    )
+
+    if not book:
+        return make_response(jsonify({"error": "Book not found"}), 404)
+
+    author_name = book.get("author")
+
+    # Check if the user is authorized to delete the review
+    if not admin and author_name != name:
+        return make_response(jsonify({"error": "Unauthorized to delete this thought"}), 403)
+
     result = books.delete_one({"_id":ObjectId(id)})
+
     if result.deleted_count == 1:
         return make_response(jsonify({}), 204)
     else:

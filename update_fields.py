@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+import random
 from pymongo import MongoClient
 import ast
 
@@ -5,6 +7,12 @@ client = MongoClient("mongodb://127.0.0.1:27017")
 db = client.comnibusDB
 #books = db.books
 users = db.users
+
+def generate_random_date():
+    # Random number of days in the past year
+    random_days = random.randint(0, 365)
+    random_date = datetime.utcnow() - timedelta(days=random_days)
+    return random_date
 
 #for book in books.find():
     #book["genres"] = ast.literal_eval(book.get("genres", "[]"))
@@ -34,6 +42,7 @@ users = db.users
     #                 })
 
 for user in users.find():
+    random_creation_date = generate_random_date()
     users.update_one({"_id": user['_id']},
                      {
                          "$set": {
@@ -42,7 +51,8 @@ for user in users.find():
                              #"favourite_books": [],
                              #"followers": [],
                              #"following": []
-                             "pronouns": ""
+                             #"pronouns": ""
+                             "created_at": random_creation_date
                              #"have_read": [],
                              #"want_to_read": [],
                              #"currently_reading": [],

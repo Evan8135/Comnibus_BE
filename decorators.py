@@ -38,11 +38,26 @@ def admin_required(func):
 def author_required(func):
     @wraps(func)
     def author_required_wrapper(*args, **kwargs):
-        token = request.headers['x-access-token']
-        data = jwt.decode(token, globals.secret_key, algorithms="HS256")
-        if data.get("user_type") == "author" or data.get("admin"):
+        token = request.headers.get('x-access-token')
+
+        if not token:
+            return make_response(jsonify({'message': 'Token is missing'}), 403)
+        
+        try:
+            data = jwt.decode(token, globals.secret_key, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            return make_response(jsonify({'message': 'Token has expired'}), 401)
+        except jwt.InvalidTokenError:
+            return make_response(jsonify({'message': 'Invalid token'}), 401)
+
+        # Ensure the user_type field is handled correctly (author or admin)
+        is_author = data.get("user_type") == "author"
+        is_admin = data.get("admin") == "true" or data.get("admin") is True
+
+        if is_author or is_admin:  # Check if the user is an author or admin
             return func(*args, **kwargs)
         else:
-            return make_response(jsonify({'message': 'Author access denied'}), 401)
+            return make_response(jsonify({'message': 'Author access denied'}), 403)
+    
     return author_required_wrapper
 

@@ -27,6 +27,8 @@ def signup():
     favourite_authors = request.form.get('favourite_authors')
     admin = request.form.get('admin', False)
 
+    current_time = datetime.utcnow()
+
     if not name or not username or not password or not email or not user_type:
         return make_response(jsonify({'message': 'Incomplete user information'}))
     
@@ -55,6 +57,7 @@ def signup():
         'want_to_read': [],
         'currently_reading': [],
         'admin': admin,
+        'created_at': current_time,
         'suspension_end_date': None
     }
 
@@ -81,8 +84,11 @@ def login():
             #    return make_response(jsonify({'message': 'Account is suspended. Come back in ' + str(remaining_days) +' days'}), 403)
             if bcrypt.checkpw(bytes(auth.password, 'UTF-8'), user["password"]):
                 token = jwt.encode( {
+                    'name': user['name'],
                     'username': auth.username,
                     'admin': user['admin'],
+                    'followers': user['followers'],
+                    'user_type': user['user_type'],
                     'exp': datetime.now(timezone.utc) + timedelta(hours=1) }, globals.secret_key, algorithm="HS256")
                 return make_response(jsonify({'token': token}), 200)
             else:
@@ -143,6 +149,14 @@ def show_one_user(id):
     user["_id"] = str(user["_id"])
     
     reviews_by_user = []
+    books_by_author = []
+    
+    if user.get("user_type") == "author":
+        # If the user is an author, find all books written by this author
+        for book in books.find({"author": user["name"]}):
+            book["_id"] = str(book["_id"])
+            books_by_author.append(book)
+
     for book in books.find({"user_reviews.username": user["username"]}):
         for review in book.get("user_reviews", []):
             if review.get("username") == user["username"]:
@@ -153,6 +167,7 @@ def show_one_user(id):
     
     response_data = {
         "user": user,
+        "books_by_author": books_by_author,
         "reviews_by_user": reviews_by_user
     }
     
@@ -506,9 +521,10 @@ def remove_profile_pic():
 @auth_bp.route("/api/v1.0/users/<string:id>", methods=["DELETE"])
 @jwt_required
 @admin_required
-def delete_request(id):
+def delete_user(id):
     result = users.delete_one({"_id":ObjectId(id)})
     if result.deleted_count == 1:
         return make_response(jsonify({}), 204)
     else:
         return make_response(jsonify({"error": "Invalid user ID"}), 404)
+    
