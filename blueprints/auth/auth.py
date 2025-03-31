@@ -74,14 +74,14 @@ def login():
     if auth:
         user = users.find_one({'username': auth.username})
         if user is not None:
-            #suspension_end_date = user.get('suspension_end_date')
-            #if suspension_end_date:
-            #    if suspension_end_date.tzinfo is None:
-            #        suspension_end_date = suspension_end_date.replace(tzinfo=timezone.utc)
+            suspension_end_date = user.get('suspension_end_date')
+            if suspension_end_date:
+                if suspension_end_date.tzinfo is None:
+                    suspension_end_date = suspension_end_date.replace(tzinfo=timezone.utc)
                 
-            #if suspension_end_date and datetime.now(timezone.utc) < suspension_end_date:
-            #    remaining_days = (suspension_end_date - datetime.now(timezone.utc)).days
-            #    return make_response(jsonify({'message': 'Account is suspended. Come back in ' + str(remaining_days) +' days'}), 403)
+            if suspension_end_date and datetime.now(timezone.utc) < suspension_end_date:
+                remaining_days = (suspension_end_date - datetime.now(timezone.utc)).days
+                return make_response(jsonify({'message': 'Account is suspended. Come back in ' + str(remaining_days) +' days'}), 403)
             if bcrypt.checkpw(bytes(auth.password, 'UTF-8'), user["password"]):
                 token = jwt.encode( {
                     'name': user['name'],
@@ -501,6 +501,26 @@ def edit_profile():
 
     return make_response(jsonify({"message": "Profile updated successfully"}), 200)
 
+@auth_bp.route('/api/v1.0/remove-all-authors', methods=["POST"])
+@jwt_required
+def remove_all_favourite_authors():
+    token_data = request.token_data
+    username = token_data['username']
+
+    # Retrieve the user from the database
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Remove all followers from the user's followers list
+    users.update_one({"_id": user["_id"]}, {"$set": {"favourite_authors": []}})
+
+    return make_response(jsonify({"message": "All authors removed successfully"}), 200)
+
+    # Optionally, you may want to remove the user from the followers lists of those who were following them
+    #for follower in user['followers']:
+    #    users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
+
 @auth_bp.route('/api/v1.0/remove-profile-pic', methods=['POST'])
 @jwt_required
 def remove_profile_pic():
@@ -527,4 +547,22 @@ def delete_user(id):
         return make_response(jsonify({}), 204)
     else:
         return make_response(jsonify({"error": "Invalid user ID"}), 404)
+    
+
+@auth_bp.route('/api/v1.0/users/<user_id>/suspend', methods=["POST"])
+@jwt_required
+@admin_required
+def suspend_user(user_id):
+    suspension_length = 7
+    suspension_end_date = datetime.now(timezone.utc) + timedelta(days=suspension_length)
+    results = users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {
+            "suspension_end_date": suspension_end_date}}
+    )
+
+    if results.modified_count == 1:
+        return make_response(jsonify({'message': "User has been suspended "}), 201)
+    else:
+        return make_response(jsonify({"error": "Invalid User ID"}), 404)
     

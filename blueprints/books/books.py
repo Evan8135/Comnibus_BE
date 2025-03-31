@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, redirect, url_for
 from bson import ObjectId
 from bson.regex import Regex
 from datetime import datetime
+from blueprints.messages.messages import send_message
 from decorators import jwt_required, admin_required, author_required
 from aggregation import user_progress_aggregation
 import globals
@@ -65,6 +66,9 @@ def show_all_books():
         }
         for review in book['user_reviews']:
             review['_id'] = str(review['_id'])
+            for reply in review['replies']:
+                reply['_id'] = str(reply['_id'])
+
         all_book_data.append(book_info)
     return make_response(jsonify(all_book_data), 200)
 
@@ -93,6 +97,8 @@ def show_one_book(id):
     book['_id'] = str(book['_id'])
     for review in book['user_reviews']:
         review['_id'] = str(review['_id'])
+        for reply in review['replies']:
+                reply['_id'] = str(reply['_id'])
     response_data = {
         "book": book,
         "same_author_books": same_author_books
@@ -105,6 +111,9 @@ def show_one_book(id):
 @author_required
 @admin_required
 def add_book():
+    token_data = request.token_data
+    name = token_data['name']
+    followers = token_data['followers']
     # Helper function to parse comma-separated values into a list
     def parse_comma_separated(value):
         if isinstance(value, str):
@@ -142,6 +151,19 @@ def add_book():
     triggers_list = parse_comma_separated(triggers)
     award_list = parse_comma_separated(awards)
 
+    def extract_year(date_str):
+        if date_str:
+            # Try to parse the year from the string (assuming it's in a standard format)
+            try:
+                return int(date_str[:4])  # Extract the first 4 characters (year)
+            except ValueError:
+                return None  # Return None if the year extraction fails
+        return None
+
+    # Extract years from the publish_date and first_publish_date
+    publish_year = extract_year(publish_date)
+    first_publish_year = extract_year(first_publish_date)
+
     # Book data structure to insert into DB
     book_data = {
         "title": title,
@@ -159,8 +181,8 @@ def add_book():
         "edition": edition,
         "pages": pages,
         "publisher": publisher,
-        "publishDate": publish_date,
-        "firstPublishDate": first_publish_date,
+        "publishDate": int(publish_year),
+        "firstPublishDate": int(first_publish_year),
         "awards": award_list,
         "coverImg": cover_img,
         "price": price
@@ -168,6 +190,14 @@ def add_book():
 
     # Insert the book into the database
     inserted_book = books.insert_one(book_data)
+
+    for author_name in author_list:
+        if name == author_name:
+            for follower in followers:
+                send_message(
+                    recipient_name=follower['username'],
+                    content=f"{name}, published a new book called {title}"
+                )
     
     return make_response(jsonify({"message": "Book added successfully", "book_id": str(inserted_book.inserted_id)}), 201)
 
@@ -176,29 +206,59 @@ def add_book():
 
 @books_bp.route("/api/v1.0/books/<string:id>", methods=["PUT"])
 @jwt_required
+@author_required
 @admin_required
 def edit_book(id):
-    # Parse the request JSON
-    update_data = request.get_json()
-    if not update_data:
-        return make_response(jsonify({"error": "No data provided"}), 400)
+    token_data = request.token_data
+    name = token_data['name']
     
-    # Ensure the book exists
     book = books.find_one({'_id': ObjectId(id)})
     if not book:
-        return make_response(jsonify({"error": "Invalid Book ID"}), 404)
+        return make_response(jsonify({"error": "Book not found"}), 404)
     
-    # Update the book
-    result = books.update_one({'_id': ObjectId(id)}, {'$set': update_data})
+    data = request.form.to_dict()
+    updates = {}
     
-    if result.modified_count == 0:
-        return make_response(jsonify({"message": "No changes made"}), 200)
+    if "title" in data:
+        updates["title"] = data["title"]
+    if "series" in data:
+        updates["series"] = data["series"]
+    if "author" in data:
+        updates["author"] = data["author"]
+    if "description" in data:
+        updates["description"] = data["description"]
+    if "language" in data:
+        updates["language"] = data["language"]
+    if "isbn" in data:
+        updates["isbn"] = data["isbn"]
+    if "genres" in data:
+        updates["genres"] = data["genres"]
+    if "characters" in data:
+        updates["characters"] = data["characters"]
+    if "triggers" in data:
+        updates["triggers"] = data["triggers"]
+    if "bookFormat" in data:
+        updates["bookFormat"] = data["bookFormat"]
+    if "edition" in data:
+        updates["edition"] = data["edition"]
+    if "pages" in data:
+        updates["pages"] = int(data["pages"])
+    if "publisher" in data:
+        updates["publisher"] = data["publisher"]
+    if "publishDate" in data:
+        updates["publishDate"] = data["publishDate"]
+    if "firstPublishDate" in data:
+        updates["firstPublishDate"] = data["firstPublishDate"]
+    if "awards" in data:
+        updates["awards"] = data["awards"]
+    if "coverImg" in data:
+        updates["coverImg"] = data["coverImg"]
+    if "price" in data:
+        updates["price"] = float(data["price"])
     
-    # Fetch the updated book
-    updated_book = books.find_one({'_id': ObjectId(id)})
-    updated_book['_id'] = str(updated_book['_id'])
+    books.update_one({"_id": ObjectId(id)}, {"$set": updates})
     
-    return make_response(jsonify(updated_book), 200)
+    return make_response(jsonify({"message": "Book updated successfully"}), 200)
 
 @books_bp.route("/api/v1.0/books/<string:id>", methods=["DELETE"])
 @jwt_required
@@ -365,6 +425,77 @@ def show_high_rated_books():
         }
         for review in book['user_reviews']:
             review['_id'] = str(review['_id'])
+            for reply in review['replies']:
+                reply['_id'] = str(reply['_id'])
+        all_book_data.append(book_info)
+    return make_response(jsonify(all_book_data), 200)
+
+@books_bp.route("/api/v1.0/new-releases", methods=['GET'])
+def show_newly_released_books():
+    page_num, page_size = 1, 10
+    title_filter = request.args.get('title')
+    author_filter = request.args.get('author')
+    genre_filter = request.args.get('genres')
+    character_filter = request.args.get('characters')
+
+    if request.args.get('pn'):
+        page_num = int(request.args.get('pn'))
+    if request.args.get('ps'):
+        page_size = int(request.args.get('ps'))
+    page_start = (page_size * (page_num - 1))
+
+    current_year = datetime.now().year
+
+    # Create the query to filter for high-rated books and books released this year
+    query = {
+        "$or": [  # Use $or to check both publishDate and firstPublishDate as integers (year)
+            {
+                "publishDate": current_year  # Match exact year for publishDate
+            },
+            {
+                "firstPublishDate": current_year  # Match exact year for firstPublishDate
+            }
+        ]
+    }
+    if title_filter:
+        query["title"] = {"$regex": Regex(title_filter, 'i')}
+    if author_filter:
+        query["author"] = {"$regex": Regex(author_filter, 'i')}
+    if genre_filter:
+        query["genres"] = {"$regex": Regex(genre_filter, 'i')}
+    if character_filter:
+        query["characters"] = {"$regex": Regex(character_filter, 'i')}
+
+    all_book_data = []
+    for book in books.find(query).skip(page_start).limit(page_size):
+        book['_id'] = str(book['_id'])
+        book_info = {
+            "_id": book['_id'],
+            "title": book['title'],
+            "series": book['series'],
+            "author": book['author'],
+            "user_score": book['user_score'],
+            "description": book['description'],
+            "user_reviews": book['user_reviews'],
+            "language": book['language'],
+            "isbn": book['isbn'],
+            "genres": book['genres'],
+            "characters": book['characters'],
+            "triggers": book['triggers'],
+            "bookFormat": book['bookFormat'],
+            "edition": book['edition'],
+            "pages": book['pages'],
+            "publisher": book['publisher'],
+            "publishDate": book['publishDate'],
+            "firstPublishDate": book['firstPublishDate'],
+            "awards": book['awards'],
+            "coverImg": book['coverImg'],
+            "price": book['price']
+        }
+        for review in book['user_reviews']:
+            review['_id'] = str(review['_id'])
+            for reply in review['replies']:
+                reply['_id'] = str(reply['_id'])
         all_book_data.append(book_info)
     return make_response(jsonify(all_book_data), 200)
 

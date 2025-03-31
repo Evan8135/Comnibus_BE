@@ -61,11 +61,11 @@ def add_new_review(id):
         return make_response(jsonify({"error": "You have already reviewed this book."}), 400)
 
     # Validate the input data
-    title = request.form.get('title')
+    title = request.form.get('title', '')
     comment = request.form.get('comment')
     stars = request.form.get('stars')
 
-    if not title or not comment or not stars:
+    if not comment or not stars:
         return make_response(jsonify({"error": "Title, comment, and stars are required."}), 400)
 
     # Create the new review
@@ -78,7 +78,8 @@ def add_new_review(id):
         'likes': 0,  # Initialize likes count
         'dislikes': 0,  # Initialize dislikes count
         'created_at': current_time,
-        'updated_at': current_time
+        'updated_at': current_time,
+        'replies': []
     }
 
     # Add the review to the book's user_reviews array
@@ -124,6 +125,8 @@ def get_one_review(review_id):
     review = book["user_reviews"][0]
     review["_id"] = str(review["_id"])  # Convert review ID to string
     review["book_id"] = str(book["_id"])  # Convert book ID to string
+    for reply in review['replies']:
+        reply['_id'] = str(reply['_id'])
 
     return make_response(jsonify(review), 200)
 
@@ -246,4 +249,111 @@ def delete_review(book_id, review_id):
     books.update_one({"_id": ObjectId(book_id)}, {"$set": {"user_score": user_score}})
 
     return make_response(jsonify({}), 204)
+
+
+@reviews_bp.route("/api/v1.0/books/<string:book_id>/reviews/<string:review_id>/replies", methods=["POST"])
+@jwt_required
+def reply_to_review(book_id, review_id):
+    token_data = request.token_data
+    username = token_data['username']
+
+    # Validate the input data
+    content = request.form.get('content')
+    if not content:
+        return make_response(jsonify({"error": "Please provide a reply content."}), 400)
+
+    added_reply = {
+        '_id': ObjectId(),
+        'username': username,
+        'content': content,
+        'created_at': datetime.utcnow(),
+        'likes': 0,  # Initialize likes count
+        'dislikes': 0  # Initialize dislikes count
+    }
+
+    # Add the reply to the review's replies array
+    result = books.update_one(
+        {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id)},
+        {"$push": {"user_reviews.$.replies": added_reply}}
+    )
+
+    if result.matched_count == 0:
+        return make_response(jsonify({"error": "Review not found"}), 404)
+
+    # Return the URL for the new reply
+    new_reply_link = f"http://localhost:5000/api/v1.0/books/" + str(book_id) + "/reviews/" + str(review_id) + "/replies/" + str(added_reply['_id'])
+    return make_response(jsonify({"url": new_reply_link}), 201)
+
+
+@reviews_bp.route("/api/v1.0/books/<string:book_id>/reviews/<string:review_id>/replies", methods=["GET"])
+def show_all_replies(book_id, review_id):
+    all_replies = []
+    book = books.find_one({"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id)}, {"user_reviews.$": 1})
+
+    if not book or "user_reviews" not in book:
+        return make_response(jsonify({"error": "Review not found"}), 404)
+
+    review = book["user_reviews"][0]
+    replies = review.get('replies', [])
+
+    for reply in replies:
+        reply['_id'] = str(reply['_id'])
+        reply['book_id'] = book_id  # Include the book_id
+        reply['review_id'] = review_id 
+        all_replies.append(reply)
+
+    return make_response(jsonify(all_replies), 200)
+
+
+
+
+@reviews_bp.route("/api/v1.0/review/<string:review_id>/replies/<string:reply_id>", methods=["GET"])
+def get_one_reply(review_id, reply_id):
+    result = books.find_one(
+        {"user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
+        {"_id": 0, "user_reviews.replies.$": 1}  # Projection to get only the matching reply
+    )
+
+    if not result or "user_reviews" not in result or not result["user_reviews"]:
+        return make_response(jsonify({"error": "Invalid reply ID"}), 400)
+
+    reply = result["user_reviews"][0]["replies"][0]  # Correctly access the nested reply
+    reply["_id"] = str(reply["_id"])  # Convert ObjectId to string
+
+    return make_response(jsonify(reply), 200)
+
+
+
+@reviews_bp.route("/api/v1.0/books/<string:book_id>/reviews/<string:review_id>/replies/<string:reply_id>/like", methods=["POST"])
+@jwt_required
+def like_reply(book_id, review_id, reply_id):
+    token_data = request.token_data
+    liker_username = token_data['username']
+
+    # Increment the like count for the reply
+    result = books.update_one(
+        {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
+        {"$inc": {"user_reviews.$.replies.$[reply].likes": 1}},
+        array_filters=[{"reply._id": ObjectId(reply_id)}]  # Specify which reply to increment
+    )
+
+    if result.matched_count == 0:
+        return make_response(jsonify({"error": "Invalid reply ID"}), 400)
+
+    # Notify the recipient
+    review = books.find_one(
+        {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
+        {"user_reviews.$": 1}
+    )
+
+    reply = review["user_reviews"][0]["replies"][0]
+    recipient_username = reply.get("username")
+
+    if recipient_username:
+        send_message(
+            recipient_name=recipient_username,
+            content=f"{liker_username} liked your reply!"
+        )
+
+    return make_response(jsonify({"message": "Reply liked successfully"}), 200)
 

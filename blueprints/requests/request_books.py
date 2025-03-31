@@ -21,7 +21,6 @@ def add_new_book_request():
     genres = request.form.get('genres')
     language = request.form.get('language')
     series = request.form.get('series', '')
-    publish_date = request.form.get('publishDate', '')
     isbn = request.form.get('isbn', '')
 
     # Validate required fields
@@ -43,13 +42,13 @@ def add_new_book_request():
     else:
         author_list = []
 
+
     new_request = {
         '_id': ObjectId(),
         'title': title,
         'series': series,
         'author': author_list,
         'genres': genres_list,
-        'publishDate': publish_date,
         'language': language,
         'isbn': isbn,
         'username': username
@@ -115,6 +114,19 @@ def approve_book_request(id):
         if field in approved_book_data:
             approved_book_data[field] = parse_comma_separated(approved_book_data[field])
 
+    def extract_year(date_str):
+        if date_str:
+            # Try to parse the year from the string (assuming it's in a standard format)
+            try:
+                return int(date_str[:4])  # Extract the first 4 characters (year)
+            except ValueError:
+                return None  # Return None if the year extraction fails
+        return None
+
+    # Extract years from the publish_date and first_publish_date
+    publish_year = extract_year(approved_book_data['publish_date'])
+    first_publish_year = extract_year(approved_book_data['first_publish_date'])
+
     approved_book_data.update({
         'title': book_request['title'],
         'author': book_request['author'],
@@ -131,8 +143,8 @@ def approve_book_request(id):
         'edition': approved_book_data.get('edition', ''),
         'pages': int(approved_book_data.get('pages', 0)),
         'publisher': approved_book_data.get('publisher', ''),
-        'publishDate': book_request['publishDate'],
-        'firstPublishDate': approved_book_data.get('firstPublishDate', ''),
+        "publishDate": int(publish_year),
+        "firstPublishDate": int(first_publish_year),
         'awards': approved_book_data.get('awards', []),  # This is now guaranteed to be a list
         'coverImg': approved_book_data.get('coverImg', ''),
         'price': int(approved_book_data.get('price', 0.0))
@@ -162,7 +174,7 @@ def reject_book_request(id):
     if not book_request:
         return make_response(jsonify({"error": "Request not found"}), 404)
     
-    recipient_name = book_request.get['username']
+    recipient_name = book_request['username']
     title = book_request['title']
     
     send_message(

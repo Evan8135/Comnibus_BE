@@ -61,6 +61,9 @@ def show_all_thoughts():
             'created_at': thought['created_at'],
             "replies": thought['replies']
         }
+        for reply in thought['replies']:
+            reply['_id'] = str(reply['_id'])
+        
         all_thoughts.append(thought_info)
     return make_response(jsonify(all_thoughts), 200)
 
@@ -70,9 +73,13 @@ def show_one_thought(id):
     thought = thoughts.find_one({'_id': ObjectId(id)})
     if thought:
         thought['_id'] = str(thought['_id'])
-        return make_response(jsonify(thought), 200)
     else:
         return make_response(jsonify({"error": "Invalid thought ID"}), 404)
+    
+    thought['_id'] = str(thought['_id'])
+    for reply in thought['replies']:
+        reply['_id'] = str(reply['_id'])
+    return make_response(jsonify(thought), 200)
     
 @thoughts_bp.route("/api/v1.0/thoughts/<string:id>/like", methods=["POST"])
 @jwt_required
@@ -191,7 +198,7 @@ def reply_to_thought(id):
     
 
     added_reply = {
-        '_id': str(ObjectId()),
+        '_id': ObjectId(),
         'username': username,
         'content': content,
         'created_at': datetime.utcnow(),
@@ -208,7 +215,7 @@ def reply_to_thought(id):
 
 
     # Return the URL for the new reply
-    new_reply_link = "http://localhost:5000/api/v1.0/thoughts/" + id + "/replies/" + (added_reply['_id'])
+    new_reply_link = f"http://localhost:5000/api/v1.0/thoughts/" + id + "/replies/" + str(added_reply['_id'])
     return make_response(jsonify({"url": new_reply_link}), 201)
 
 
@@ -225,18 +232,22 @@ def show_all_replys(id):
 
     return make_response(jsonify(all_replys), 200)
 
+
+
 @thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>", methods=["GET"])
 def get_one_reply(thought_id, reply_id):
-    thought = thoughts.find_one(
-        {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
-        {"_id": 0, "replies.$": 1}
-    )
-
+    thought = thoughts.find_one( { "_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id) }, 
+                            { "_id" : 0, "replies.$" : 1 } )
     if thought is None:
-        return make_response(jsonify({"error": "Invalid reply ID"}), 400)
+        return make_response( jsonify( { "error" : "Invalid Review ID" } ), 400 )
+    thought['replies'][0]['_id'] = str( thought['replies'][0]['_id'] )
 
-    thought['replies'][0]['_id'] = str(thought['replies'][0]['_id'])
-    return make_response(jsonify(thought["replies"][0]), 200)
+    
+    return make_response( jsonify( thought["replies"][0] ), 200 )
+
+
+
+
 
 @thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>/like", methods=["POST"])
 @jwt_required
@@ -272,3 +283,31 @@ def like_reply(thought_id, reply_id):
     return make_response(jsonify({"message": "reply liked successfully"}), 200)
 
     
+@thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>", methods=["DELETE"]) 
+@jwt_required
+def delete_review(thought_id, reply_id):
+    token_data = request.token_data
+    current_user = token_data['username']
+    admin = token_data.get('admin', False)
+
+    # Find the book and the specific review to delete
+    thought = thoughts.find_one(
+        {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
+        {"replies.$": 1}
+    )
+
+    if not thought or "replies" not in thought:
+        return make_response(jsonify({"error": "Review not found"}), 404)
+
+    reply = thought["replies"][0]
+    reply_username = reply.get("username")
+
+    # Check if the user is authorized to delete the review
+    if not admin and reply_username != current_user:
+        return make_response(jsonify({"error": "Unauthorized to delete this review"}), 403)
+
+    # Remove the review from the book
+    thoughts.update_one({ "_id" : ObjectId(thought_id) }, { "$pull" : { "replies" : { "_id" : ObjectId(reply_id) } } })
+    
+    
+    return make_response(jsonify({}), 204)
