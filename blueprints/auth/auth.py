@@ -282,7 +282,7 @@ def user_feed():
         for review in book.get("user_reviews", []):
             if review.get("username") == username:
                 reviews_by_user.append({
-                    "activity_type": "Reviewed",
+                    "activity_type": "reviewed",
                     "username": "You",
                     "book_id": str(book["_id"]),
                     "book_title": book["title"],
@@ -293,12 +293,30 @@ def user_feed():
 
     feed_activities.extend(reviews_by_user)
 
+    review_replies_by_user = []
+    for book in books.find({"user_reviews.username": username}):
+        for review in book.get("user_reviews", []):
+            for review_reply in review.get("replies", []):
+                if review_reply.get("username") == username:
+                    review_replies_by_user.append({
+                        "activity_type": "replied to a review by",
+                        "username": "You",
+                        "review_user": review["username"],
+                        "book_id": str(book["_id"]),
+                        "review_id": str(review["_id"]),
+                        "reply_id": str(review_reply["_id"]),
+                        "reply_content": review_reply["content"],
+                        "timestamp": review_reply.get("created_at", datetime.now().isoformat())
+                    })
+    feed_activities.extend(review_replies_by_user)
+
     thoughts_by_user = []
     for thought in thoughts.find({"username": username}):
         if thought.get("username") == username:
             thoughts_by_user.append({
-                "activity_type": "Posted a Thought",
+                "activity_type": "posted a thought",
                 "username": "You",
+                "thought_id": str(thought["_id"]),
                 "thought_content": thought["comment"],
                 "timestamp": thought.get("created_at", datetime.now().isoformat())
             })
@@ -310,8 +328,9 @@ def user_feed():
         for reply in thought.get("replies", []):
             if reply.get("username") == username:
                 replies_by_user.append({
-                    "activity_type": "Replied to",
+                    "activity_type": "replied to a thought by",
                     "username": "You",
+                    "thought_id": str(thought["_id"]),
                     "thought_user": thought["username"],
                     "reply_content": reply["content"],
                     "timestamp": reply.get("created_at", datetime.now().isoformat())
@@ -341,7 +360,7 @@ def user_feed():
             for review in book.get("user_reviews", []):
                 if review.get("username") == followed_username:
                     feed_activities.append({
-                        "activity_type": "Reviewed",
+                        "activity_type": "reviewed",
                         "username": followed_username,
                         "book_id": str(book["_id"]),
                         "book_title": book["title"],
@@ -349,11 +368,28 @@ def user_feed():
                         "review_content": review["comment"],
                         "timestamp": review.get("created_at", datetime.now())
                     })
+
+        for book in books.find({"user_reviews.username": followed_username}):
+            for review in book.get("user_reviews", []):
+                for review_reply in review.get("replies", []):
+                    if review_reply.get("username") == followed_username:
+                        feed_activities.append({
+                            "activity_type": "replied to a review by",
+                            "username": followed_username,
+                            "review_user": review["username"],
+                            "book_id": str(book["_id"]),
+                            "review_id": str(review["_id"]),
+                            "review_reply_id": str(review_reply["_id"]),
+                            "review_reply_content": review_reply["content"],
+                            "timestamp": review_reply.get("created_at", datetime.now().isoformat())
+                        })
+
+
         
         for thought in thoughts.find({"username": followed_username}):
             if thought.get("username") == username:
                 thoughts_by_user.append({
-                    "activity_type": "Posted a Thought",
+                    "activity_type": "posted a thought",
                     "username": followed_username,
                     "thought_content": thought["comment"],
                     "timestamp": thought.get("created_at", datetime.now().isoformat())
@@ -363,8 +399,9 @@ def user_feed():
             for reply in thought.get("replies", []):
                 if reply.get("username") == followed_username:
                     feed_activities.append({
-                        "activity_type": "Replied to",
+                        "activity_type": "replied to a thought by",
                         "username": followed_username,
+                        "thought_id": str(thought["_id"]),
                         "thought_user": thought["username"],
                         "reply_content": reply["content"],
                         "timestamp": reply.get("created_at", datetime.now())

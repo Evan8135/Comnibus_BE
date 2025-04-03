@@ -108,6 +108,9 @@ def show_all_reviews(id):
     for review in user_reviews:
         review['_id'] = str(review['_id'])
         all_reviews.append(review)
+    for reply in review['replies']:
+        reply['_id'] = str(reply['_id'])
+        
 
     return make_response(jsonify(all_reviews), 200)
 
@@ -324,31 +327,48 @@ def get_one_reply(review_id, reply_id):
 
 
 
-@reviews_bp.route("/api/v1.0/books/<string:book_id>/reviews/<string:review_id>/replies/<string:reply_id>/like", methods=["POST"])
+@reviews_bp.route("/api/v1.0/review/<string:review_id>/replies/<string:reply_id>/like", methods=["POST"])
 @jwt_required
-def like_reply(book_id, review_id, reply_id):
+def like_reply(review_id, reply_id):
     token_data = request.token_data
     liker_username = token_data['username']
 
-    # Increment the like count for the reply
+    # Fetch the review with the specified review_id and reply_id
+    review = books.find_one(
+        {"user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
+        {"user_reviews.$": 1}
+    )
+
+    if not review or not review.get("user_reviews"):
+        return make_response(jsonify({"error": "Review not found"}), 404)
+
+    # Extract the specific reply object
+    user_reviews = review["user_reviews"]
+    reply = None
+    for r in user_reviews:
+        reply = next((rep for rep in r.get("replies", []) if str(rep["_id"]) == reply_id), None)
+        if reply:
+            break
+
+    if not reply:
+        return make_response(jsonify({"error": "Reply not found"}), 404)
+
+    recipient_username = reply.get("username")
+
+    if liker_username == recipient_username:
+        return make_response(jsonify({"message": "You cannot like your own review"}), 403)
+
+    # Increment the like count for the specific reply
     result = books.update_one(
-        {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
+        {"user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
         {"$inc": {"user_reviews.$.replies.$[reply].likes": 1}},
-        array_filters=[{"reply._id": ObjectId(reply_id)}]  # Specify which reply to increment
+        array_filters=[{"reply._id": ObjectId(reply_id)}]  # Ensure we are targeting the correct reply
     )
 
     if result.matched_count == 0:
         return make_response(jsonify({"error": "Invalid reply ID"}), 400)
 
-    # Notify the recipient
-    review = books.find_one(
-        {"_id": ObjectId(book_id), "user_reviews._id": ObjectId(review_id), "user_reviews.replies._id": ObjectId(reply_id)},
-        {"user_reviews.$": 1}
-    )
-
-    reply = review["user_reviews"][0]["replies"][0]
-    recipient_username = reply.get("username")
-
+    # Send notification to the recipient
     if recipient_username:
         send_message(
             recipient_name=recipient_username,
@@ -356,4 +376,5 @@ def like_reply(book_id, review_id, reply_id):
         )
 
     return make_response(jsonify({"message": "Reply liked successfully"}), 200)
+
 

@@ -211,20 +211,24 @@ def add_book():
 def edit_book(id):
     token_data = request.token_data
     name = token_data['name']
+    admin = token_data.get('admin', False)
     
     book = books.find_one({'_id': ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Book not found"}), 404)
     
-    data = request.form.to_dict()
+    author_name = book.get("author")
+    
+    if not admin and author_name != name:
+        return make_response(jsonify({"error": "Unauthorized to delete this thought"}), 403)
+    
+    data = request.get_json()
     updates = {}
     
     if "title" in data:
         updates["title"] = data["title"]
     if "series" in data:
         updates["series"] = data["series"]
-    if "author" in data:
-        updates["author"] = data["author"]
     if "description" in data:
         updates["description"] = data["description"]
     if "language" in data:
@@ -246,9 +250,9 @@ def edit_book(id):
     if "publisher" in data:
         updates["publisher"] = data["publisher"]
     if "publishDate" in data:
-        updates["publishDate"] = data["publishDate"]
+        updates["publishDate"] = int(data["publishDate"])
     if "firstPublishDate" in data:
-        updates["firstPublishDate"] = data["firstPublishDate"]
+        updates["firstPublishDate"] = int(data["firstPublishDate"])
     if "awards" in data:
         updates["awards"] = data["awards"]
     if "coverImg" in data:

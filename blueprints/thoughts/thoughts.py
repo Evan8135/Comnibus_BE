@@ -237,10 +237,12 @@ def show_all_replys(id):
 @thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>", methods=["GET"])
 def get_one_reply(thought_id, reply_id):
     thought = thoughts.find_one( { "_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id) }, 
-                            { "_id" : 0, "replies.$" : 1 } )
+                            { "_id" : 1, "replies.$" : 1 } )
     if thought is None:
         return make_response( jsonify( { "error" : "Invalid Review ID" } ), 400 )
-    thought['replies'][0]['_id'] = str( thought['replies'][0]['_id'] )
+    reply = thought['replies'][0]
+    reply['_id'] = str(reply["_id"])
+    reply['thought_id'] = str(thought['_id'])
 
     
     return make_response( jsonify( thought["replies"][0] ), 200 )
@@ -255,32 +257,40 @@ def like_reply(thought_id, reply_id):
     token_data = request.token_data
     liker_username = token_data['username']
 
+    # Check if the review exists and get the review details
+    thought = thoughts.find_one(
+        {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
+        {"replies.$": 1}
+    )
+    
+
+    if not thought or "replies" not in thought:
+        return make_response(jsonify({"error": "Reply not found"}), 404)
+
+    reply = thought["replies"][0]
+    recipient_username = reply.get("username")
+
+    # Check if the liker is trying to like their own review
+    if liker_username == recipient_username:
+        return make_response(jsonify({"error": "You cannot like your own replies"}), 400)
+
+    # Increment the like count for the review
     result = thoughts.update_one(
         {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
         {"$inc": {"replies.$.likes": 1}}
     )
 
     if result.matched_count == 0:
-        return make_response(jsonify({"error": "Invalid reply ID"}), 400)
+        return make_response(jsonify({"error": "Invalid Reply ID"}), 400)
 
-    thought = thoughts.find_one(
-        {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
-        {"replies.$": 1}
-    )
-
-    if not thought or "replies" not in thought:
-        return make_response(jsonify({"error": "reply not found"}), 404)
-
-    reply = thought["replies"][0]
-    recipient_username = reply.get("username")
-
+    # Send a notification to the recipient that their review was liked
     if recipient_username:
         send_message(
             recipient_name=recipient_username,
-            content=f"{liker_username} liked your reply!"
+            content=f"{liker_username} liked your Reply!"
         )
 
-    return make_response(jsonify({"message": "reply liked successfully"}), 200)
+    return make_response(jsonify({"message": "Reply liked successfully"}), 200)
 
     
 @thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>", methods=["DELETE"]) 
