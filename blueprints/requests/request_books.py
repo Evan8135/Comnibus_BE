@@ -11,6 +11,8 @@ requests = globals.db.requests
 books = globals.db.books
 users = globals.db.users
 
+# BOOK REQUEST APIS
+#------------------------------------------------------------------------------------------------------------------
 @request_books_bp.route("/api/v1.0/add-requests", methods=["POST"])
 @jwt_required
 def add_new_book_request():
@@ -23,11 +25,9 @@ def add_new_book_request():
     series = request.form.get('series', '')
     isbn = request.form.get('isbn', '')
 
-    # Validate required fields
     if not title or not author or not genres or not language:
         return make_response(jsonify({"error": "You missed a required field"}), 400)
 
-    # Ensure genres is a list
     if isinstance(genres, str):
         genres_list = [g.strip() for g in genres.split(",")]
     elif isinstance(genres, list):
@@ -54,7 +54,6 @@ def add_new_book_request():
         'username': username
     }
 
-    # Insert into MongoDB (ensure `requests` is the correct collection)
     new_request_id = requests.insert_one(new_request)
 
     request_link = f"http://localhost:4200/api/v1.0/requests/{new_request_id.inserted_id}"
@@ -103,27 +102,23 @@ def approve_book_request(id):
     
     approved_book_data = request.form.to_dict()
     
-    # Helper function to parse comma-separated strings into a list
     def parse_comma_separated(value):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value if isinstance(value, list) else []
     
-    # Apply the parsing logic to the fields
     for field in ["author", "genres", "characters", "triggers", "awards"]:
         if field in approved_book_data:
             approved_book_data[field] = parse_comma_separated(approved_book_data[field])
 
     def extract_year(date_str):
         if date_str:
-            # Try to parse the year from the string (assuming it's in a standard format)
             try:
-                return int(date_str[:4])  # Extract the first 4 characters (year)
+                return int(date_str[:4])
             except ValueError:
-                return None  # Return None if the year extraction fails
+                return None
         return None
 
-    # Extract years from the publish_date and first_publish_date
     publish_year = extract_year(approved_book_data['publish_date'])
     first_publish_year = extract_year(approved_book_data['first_publish_date'])
 
@@ -137,30 +132,27 @@ def approve_book_request(id):
         'description': approved_book_data.get('description', ''),
         'user_reviews': [],
         'isbn': book_request['isbn'],
-        'characters': approved_book_data.get('characters', []),  # This is now guaranteed to be a list
-        'triggers': approved_book_data.get('triggers', []),  # This is now guaranteed to be a list
+        'characters': approved_book_data.get('characters', []), 
+        'triggers': approved_book_data.get('triggers', []),
         'bookFormat': approved_book_data.get('bookFormat', ''),
         'edition': approved_book_data.get('edition', ''),
         'pages': int(approved_book_data.get('pages', 0)),
         'publisher': approved_book_data.get('publisher', ''),
         "publishDate": int(publish_year),
         "firstPublishDate": int(first_publish_year),
-        'awards': approved_book_data.get('awards', []),  # This is now guaranteed to be a list
+        'awards': approved_book_data.get('awards', []),
         'coverImg': approved_book_data.get('coverImg', ''),
         'price': int(approved_book_data.get('price', 0.0))
     })
     
-    # Insert the approved book data into the books collection
     approved_book_id = books.insert_one(approved_book_data)
     approved_book_link = f"http://localhost:4200/api/v1.0/books/{approved_book_id.inserted_id}"
 
-    # Send notification
     send_message(
         recipient_name=book_request['username'],
         content=f"Dear '{book_request['username']}', your request for '{book_request['title']}' has been approved and added to our system. Here is the link to the book: {approved_book_link}. Thank you."
     )
 
-    # Delete the book request from the requests collection
     requests.delete_one({'_id': ObjectId(id)})
 
     return make_response(jsonify({"message": "Request has been approved", "url": approved_book_link}), 201)

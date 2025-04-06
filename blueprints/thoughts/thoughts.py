@@ -9,7 +9,11 @@ thoughts_bp = Blueprint("thoughts_bp", __name__)
 
 users = globals.db.users
 thoughts = globals.db.thoughts
+reports = globals.db.reports
 
+# USER THOUGHT APIS
+#------------------------------------------------------------------------------------------------------------------
+# 1. BASIC THOUGHT FEATURES
 @thoughts_bp.route("/api/v1.0/thoughts", methods=["POST"])
 @jwt_required
 def post_thought():
@@ -21,15 +25,13 @@ def post_thought():
 
     if not comment:
         return make_response(jsonify({"error": "Please fill in thought"}), 400)
-    
-    
 
     posted_thought = {
         '_id': ObjectId(),
         'username': username,
         'comment': comment,
-        'likes': 0,  # Initialize likes count
-        'dislikes': 0,  # Initialize dislikes count
+        'likes': 0, 
+        'dislikes': 0, 
         'created_at': datetime.utcnow(),
         'replies': []
     }
@@ -91,7 +93,6 @@ def like_thought(id):
     if not thought:
         return make_response(jsonify({"error": "Thought not found"}), 404)
 
-    # Increment likes
     result = thoughts.update_one(
         {"_id": ObjectId(id)},
         {"$inc": {"likes": 1}}
@@ -101,7 +102,7 @@ def like_thought(id):
         return make_response(jsonify({"error": "Invalid thought ID"}), 400)
 
     recipient_username = thought.get("username")
-    print("Recipient username:", recipient_username)  # Debugging log
+    print("Recipient username:", recipient_username) 
 
     if recipient_username:
         send_message(
@@ -122,7 +123,6 @@ def dislike_thought(id):
     if not thought:
         return make_response(jsonify({"error": "Thought not found"}), 404)
 
-    # Increment dislikes
     result = thoughts.update_one(
         {"_id": ObjectId(id)},
         {"$inc": {"dislikes": 1}}
@@ -132,7 +132,7 @@ def dislike_thought(id):
         return make_response(jsonify({"error": "Invalid thought ID"}), 400)
 
     recipient_username = thought.get("username")
-    print("Recipient username:", recipient_username)  # Debugging log
+    print("Recipient username:", recipient_username)
 
     if recipient_username:
         send_message(
@@ -142,17 +142,6 @@ def dislike_thought(id):
 
     return make_response(jsonify({"message": "Thought disliked successfully"}), 200)
 
-@thoughts_bp.route("/api/v1.0/thoughts/delete_all", methods=["DELETE"])
-@jwt_required
-@admin_required  # Ensure only admins can delete all thoughts
-def delete_all_thoughts():
-    result = thoughts.delete_many({})  # Delete all thoughts in the collection
-    
-    if result.deleted_count > 0:
-        return make_response(jsonify({"message": f"{result.deleted_count} thoughts deleted successfully."}), 200)
-    else:
-        return make_response(jsonify({"error": "No thoughts found to delete."}), 404)
-    
 @thoughts_bp.route("/api/v1.0/thoughts/<string:id>", methods=["DELETE"]) 
 @jwt_required
 def delete_thought(id):
@@ -180,21 +169,33 @@ def delete_thought(id):
         return make_response(jsonify({}), 204)
     else:
         return make_response(jsonify({"error": "Invalid request ID"}), 404)
+    
 
-
-
+#------------------------------------------------------------------------------------------------------------------
+# 1.5. TESTING THOUGHT FEATURES
+@thoughts_bp.route("/api/v1.0/thoughts/delete_all", methods=["DELETE"])
+@jwt_required
+@admin_required  # Ensure only admins can delete all thoughts
+def delete_all_thoughts():
+    result = thoughts.delete_many({})  # Delete all thoughts in the collection
+    
+    if result.deleted_count > 0:
+        return make_response(jsonify({"message": f"{result.deleted_count} thoughts deleted successfully."}), 200)
+    else:
+        return make_response(jsonify({"error": "No thoughts found to delete."}), 404)
+    
+#------------------------------------------------------------------------------------------------------------------
+# 2. REPLY FEATURES
 @thoughts_bp.route("/api/v1.0/thoughts/<string:id>/replies", methods=["POST"])
 @jwt_required
 def reply_to_thought(id):
     token_data = request.token_data
     username = token_data['username']  # USERNAME FROM LOGIN IS FILLED IN AUTOMATICALLY
 
-    # Validate the input data
     content = request.form.get('content')
 
     if not content:
         return make_response(jsonify({"error": "Please put something in."}), 400)
-    
     
 
     added_reply = {
@@ -202,19 +203,15 @@ def reply_to_thought(id):
         'username': username,
         'content': content,
         'created_at': datetime.utcnow(),
-        'likes': 0,  # Initialize likes count
-        'dislikes': 0  # Initialize dislikes count
+        'likes': 0,
+        'dislikes': 0
     }
 
-    # Add the reply to the thought's replies array
     thoughts.update_one(
         {"_id": ObjectId(id)},
         {"$push": {"replies": added_reply}}
     )
 
-
-
-    # Return the URL for the new reply
     new_reply_link = f"http://localhost:5000/api/v1.0/thoughts/" + id + "/replies/" + str(added_reply['_id'])
     return make_response(jsonify({"url": new_reply_link}), 201)
 
@@ -248,16 +245,12 @@ def get_one_reply(thought_id, reply_id):
     return make_response( jsonify( thought["replies"][0] ), 200 )
 
 
-
-
-
 @thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>/like", methods=["POST"])
 @jwt_required
 def like_reply(thought_id, reply_id):
     token_data = request.token_data
     liker_username = token_data['username']
 
-    # Check if the review exists and get the review details
     thought = thoughts.find_one(
         {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
         {"replies.$": 1}
@@ -270,11 +263,9 @@ def like_reply(thought_id, reply_id):
     reply = thought["replies"][0]
     recipient_username = reply.get("username")
 
-    # Check if the liker is trying to like their own review
     if liker_username == recipient_username:
         return make_response(jsonify({"error": "You cannot like your own replies"}), 400)
 
-    # Increment the like count for the review
     result = thoughts.update_one(
         {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
         {"$inc": {"replies.$.likes": 1}}
@@ -283,7 +274,6 @@ def like_reply(thought_id, reply_id):
     if result.matched_count == 0:
         return make_response(jsonify({"error": "Invalid Reply ID"}), 400)
 
-    # Send a notification to the recipient that their review was liked
     if recipient_username:
         send_message(
             recipient_name=recipient_username,
@@ -295,12 +285,11 @@ def like_reply(thought_id, reply_id):
     
 @thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>", methods=["DELETE"]) 
 @jwt_required
-def delete_review(thought_id, reply_id):
+def delete_reply(thought_id, reply_id):
     token_data = request.token_data
     current_user = token_data['username']
     admin = token_data.get('admin', False)
 
-    # Find the book and the specific review to delete
     thought = thoughts.find_one(
         {"_id": ObjectId(thought_id), "replies._id": ObjectId(reply_id)},
         {"replies.$": 1}
@@ -312,12 +301,104 @@ def delete_review(thought_id, reply_id):
     reply = thought["replies"][0]
     reply_username = reply.get("username")
 
-    # Check if the user is authorized to delete the review
     if not admin and reply_username != current_user:
         return make_response(jsonify({"error": "Unauthorized to delete this review"}), 403)
 
-    # Remove the review from the book
     thoughts.update_one({ "_id" : ObjectId(thought_id) }, { "$pull" : { "replies" : { "_id" : ObjectId(reply_id) } } })
     
     
     return make_response(jsonify({}), 204)
+
+#------------------------------------------------------------------------------------------------------------------
+# 3. REPORT FEATURES
+@thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/report", methods=["POST"])
+@jwt_required
+def report_thought(thought_id):
+    token_data = request.token_data
+    reporter_username = token_data['username']
+
+    reason = request.form.get('reason')
+    if not reason:
+        return make_response(jsonify({"error": "Please provide a reason for the report."}), 400)
+
+    thought = thoughts.find_one(
+        {"_id": ObjectId(thought_id)}
+    )
+
+    if not thought:
+        return make_response(jsonify({"error": "Thought not found"}), 404)
+
+    report = {
+        "_id": ObjectId(),
+        "type": "thought",
+        "item_id": str(thought_id),
+        "reported_by": reporter_username,
+        "reason": reason,
+        "reported_at": datetime.utcnow(),
+        "status": "pending",
+        "details": {
+            "review": {
+                "username": thought["username"],
+                "comment": thought.get("comment"),
+            }
+        }
+    }
+    
+    reports.insert_one(report)
+
+    send_message(
+        recipient_name=report['reported_by'],
+        content=f"Your report will be reviewed by our admins to see if it violates our community guidlines"
+    )
+    
+    return make_response(jsonify({"message": "Review reported successfully."}), 201)
+
+
+@thoughts_bp.route("/api/v1.0/thoughts/<string:thought_id>/replies/<string:reply_id>/report", methods=["POST"])
+@jwt_required
+def report_reply(thought_id, reply_id):
+    token_data = request.token_data
+    reporter_username = token_data['username']
+
+    reason = request.form.get('reason')
+    if not reason:
+        return make_response(jsonify({"error": "Please provide a reason for the report."}), 400)
+
+    thought = thoughts.find_one(
+        {"replies._id": ObjectId(thought_id)},
+        {"_id": 1, "user_reviews.$": 1}
+    )
+
+    if not thought or "replies" not in thought:
+        return make_response(jsonify({"error": "Review not found"}), 404)
+
+    reply = thought["replies"][0]
+
+    if not reply:
+        return make_response(jsonify({"error": "Reply not found"}), 404)
+
+    report = {
+        "_id": ObjectId(),
+        "type": "thought reply",
+        "item_id": str(reply_id),
+        "thought_id": str(reply_id),
+        "reported_by": reporter_username,
+        "reason": reason,
+        "reported_at": datetime.utcnow(),
+        "status": "pending",
+        "details": {
+            "reply": {
+                "username": reply["username"],
+                "content": reply.get("content"),
+            }
+        }
+    }
+
+    reports.insert_one(report)
+
+    send_message(
+        recipient_name=reporter_username,
+        content=f"Your report will be reviewed by our admins to see if it violates our community guidlines"
+    )
+
+    return make_response(jsonify({"message": "Reply reported successfully."}), 201)

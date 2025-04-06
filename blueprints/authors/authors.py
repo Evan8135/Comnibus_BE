@@ -9,6 +9,8 @@ import globals
 authors_bp = Blueprint("authors_bp", __name__)
 books = globals.db.books
 
+# AUTHOR APIS
+#------------------------------------------------------------------------------------------------------------------
 @authors_bp.route("/api/v1.0/authors", methods=["GET"])
 def get_all_authors():
     try:

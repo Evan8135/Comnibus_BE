@@ -8,11 +8,11 @@ db = client.comnibusDB
 #books = db.books
 users = db.users
 
-def generate_random_date():
+#def generate_random_date():
     # Random number of days in the past year
-    random_days = random.randint(0, 365)
-    random_date = datetime.utcnow() - timedelta(days=random_days)
-    return random_date
+#    random_days = random.randint(0, 365)
+#    random_date = datetime.utcnow() - timedelta(days=random_days)
+#    return random_date
 
 #for book in books.find():
     #book["genres"] = ast.literal_eval(book.get("genres", "[]"))
@@ -42,7 +42,7 @@ def generate_random_date():
     #                 })
 
 for user in users.find():
-    random_creation_date = generate_random_date()
+    #random_creation_date = generate_random_date()
     users.update_one({"_id": user['_id']},
                      {
                          "$set": {
@@ -52,7 +52,8 @@ for user in users.find():
                              #"followers": [],
                              #"following": []
                              #"pronouns": ""
-                             "created_at": random_creation_date
+                             #"created_at": random_creation_date
+                             "awards": []
                              #"have_read": [],
                              #"want_to_read": [],
                              #"currently_reading": [],

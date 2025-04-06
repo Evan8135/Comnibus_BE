@@ -5,6 +5,8 @@ import globals
 genres_bp = Blueprint("genres_bp", __name__)
 books = globals.db.books
 
+# GENRE APIS
+#------------------------------------------------------------------------------------------------------------------
 @genres_bp.route("/api/v1.0/genres", methods=["GET"])
 def get_all_genres():
     try:

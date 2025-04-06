@@ -9,6 +9,8 @@ from blueprints.auth.auth import auth_bp
 from blueprints.messages.messages import messages_bp
 from blueprints.imgur_uploader.imgur_uploader import imgur_upload_bp
 from blueprints.thoughts.thoughts import thoughts_bp
+from blueprints.reports.reports import reports_bp
+from blueprints.deleted_accounts.deleted_accounts import deleted_accounts_bp
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -24,6 +26,8 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(messages_bp)
 app.register_blueprint(imgur_upload_bp)
 app.register_blueprint(thoughts_bp)
+app.register_blueprint(reports_bp)
+app.register_blueprint(deleted_accounts_bp)
 
 
 

@@ -1,13 +1,12 @@
 import requests
 from flask import Blueprint, request, jsonify
 
-# Create a Flask Blueprint
 imgur_upload_bp = Blueprint("imgur_upload_bp", __name__)
 
-# Your Imgur API Client ID
 IMGUR_CLIENT_ID = "8cc2c21f701f179"
 
-# Flask method to handle the image upload
+# IMAGE UPLOAD API
+#------------------------------------------------------------------------------------------------------------------
 @imgur_upload_bp.route("/api/v1.0/upload-image", methods=["POST"])
 def upload_image():
     if "image" not in request.files:

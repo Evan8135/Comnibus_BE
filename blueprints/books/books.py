@@ -114,13 +114,11 @@ def add_book():
     token_data = request.token_data
     name = token_data['name']
     followers = token_data['followers']
-    # Helper function to parse comma-separated values into a list
     def parse_comma_separated(value):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value if isinstance(value, list) else []
 
-    # Get form data
     title = request.form.get("title")
     series = request.form.get("series", "")
     author = request.form.get("author")
@@ -140,11 +138,9 @@ def add_book():
     cover_img = request.form.get("coverImg")
     price = float(request.form.get("price", 0.0))
 
-    # Ensure required fields are present
     if not title or not author:
         return make_response(jsonify({"error": "Title and Author are required fields"}), 400)
 
-    # Apply the parsing logic to the fields (genres, author, characters, triggers, awards)
     genres_list = parse_comma_separated(genres)
     author_list = parse_comma_separated(author)
     characters_list = parse_comma_separated(characters)
@@ -153,18 +149,15 @@ def add_book():
 
     def extract_year(date_str):
         if date_str:
-            # Try to parse the year from the string (assuming it's in a standard format)
             try:
-                return int(date_str[:4])  # Extract the first 4 characters (year)
+                return int(date_str[:4])
             except ValueError:
-                return None  # Return None if the year extraction fails
+                return None 
         return None
 
-    # Extract years from the publish_date and first_publish_date
     publish_year = extract_year(publish_date)
     first_publish_year = extract_year(first_publish_date)
 
-    # Book data structure to insert into DB
     book_data = {
         "title": title,
         "series": series,
@@ -188,7 +181,6 @@ def add_book():
         "price": price
     }
 
-    # Insert the book into the database
     inserted_book = books.insert_one(book_data)
 
     for author_name in author_list:
@@ -282,7 +274,6 @@ def delete_books(id):
 
     author_name = book.get("author")
 
-    # Check if the user is authorized to delete the review
     if not admin and author_name != name:
         return make_response(jsonify({"error": "Unauthorized to delete this thought"}), 403)
 
@@ -299,16 +290,13 @@ def delete_books(id):
 @books_bp.route("/api/v1.0/recommendations", methods=["GET"])
 @jwt_required
 def get_recommendations():
-    # Get user info from token
     token_data = request.token_data
     username = token_data["username"]
 
-    # Find user and get their preferences
     user = users.find_one({"username": username}, {"password": 0})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Get the user's favorite genres and authors
     fav_genres = user.get("favourite_genres", [])
     fav_authors = user.get("favourite_authors", [])
 
@@ -316,39 +304,32 @@ def get_recommendations():
     page_size = int(request.args.get('page_size', 10))
     skip = (page - 1) * page_size
 
-    # Prepare a list to hold recommended books
     recommended_books = []
 
-    # Fetch books based on genres
     genre_query = {}
     if fav_genres:
         genre_query["genres"] = {"$in": fav_genres}
 
-    # Fetch books based on authors
     author_query = {}
     if fav_authors:
         author_query["author"] = {"$in": fav_authors}
 
-    # Query for books based on genres
     if fav_genres:
         genre_books = list(books.find(genre_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(100))
         recommended_books.extend(genre_books)
 
-    # Query for books based on authors
     if fav_authors:
         author_books = list(books.find(author_query, {"_id": 1, "title": 1, "author": 1, "coverImg": 1, "genres": 1}).limit(50))
         recommended_books.extend(author_books)
 
     rated_books = user.get("have_read", [])
     for rated_book in rated_books:
-        if rated_book["stars"] > 3.5:  # Only if rated above half a star
-            # Check if the author is in an array of authors, hence using `$in` operator
+        if rated_book["stars"] > 3.5: 
             same_author_books = list(books.find({
-                "author": {"$in": [rated_book["author"]]},  # Check if the rated book's author is in the author array
-                "_id": {"$ne": ObjectId(rated_book["_id"])}  # Exclude the rated book itself
+                "author": {"$in": [rated_book["author"]]},
+                "_id": {"$ne": ObjectId(rated_book["_id"])}
             }))
 
-            # Add the books by the same author
             for book in same_author_books:
                 recommended_books.append({
                     "_id": str(book["_id"]),
@@ -359,14 +340,11 @@ def get_recommendations():
                 })
 
 
-    # Ensure no duplicates (if a book is found in both genres and authors)
     recommended_books = list({str(book["_id"]): book for book in recommended_books}.values())
 
-    # Convert ObjectId to string for serialization
     for book in recommended_books:
         book["_id"] = str(book["_id"])
 
-    # Return the recommended books along with user's preferences
     return make_response(jsonify({
         "recommended_books": recommended_books,
         "favorite_genres": fav_genres,
@@ -450,9 +428,8 @@ def show_newly_released_books():
 
     current_year = datetime.now().year
 
-    # Create the query to filter for high-rated books and books released this year
     query = {
-        "$or": [  # Use $or to check both publishDate and firstPublishDate as integers (year)
+        "$or": [
             {
                 "publishDate": current_year  # Match exact year for publishDate
             },
@@ -506,6 +483,38 @@ def show_newly_released_books():
 
 #------------------------------------------------------------------------------------------------------------------
 # 5. BOOKSHELVES
+# Helper function to check and assign awards
+def check_and_assign_awards(user):
+    read_count = len(user.get("have_read", []))
+    current_awards = set(user.get("awards", []))  # ensure it's a set for quick lookup
+
+    new_awards = []
+
+    # Define milestones
+    milestones = {
+        1: "First Book Read",
+        5: "5 Books Read",
+        10: "10 Books Read",
+        25: "25 Books Read",
+        50: "50 Books Read",
+        100: "100 Books Read"
+    }
+
+    for milestone, award in milestones.items():
+        if read_count >= milestone and award not in current_awards:
+            new_awards.append(award)
+
+    if new_awards:
+        users.update_one(
+            {"_id": user["_id"]},
+            {"$addToSet": {"awards": {"$each": new_awards}}}
+        )
+
+        return new_awards
+
+    return []
+
+
 @books_bp.route("/api/v1.0/books/<string:id>/have-read", methods=["POST"])
 @jwt_required
 def have_read_book(id):
@@ -513,19 +522,14 @@ def have_read_book(id):
     username = token_data["username"]
     date_read = request.form.get('date_read')
 
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Find the book
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
-    
-    
 
-    # Retrieve 'stars' from form data
     if "stars" not in request.form:
         return make_response(jsonify({"error": "Missing 'stars' field"}), 400)
 
@@ -535,13 +539,10 @@ def have_read_book(id):
             return make_response(jsonify({"error": "Stars must be between 0 and 5"}), 400)
     except ValueError:
         return make_response(jsonify({"error": "Invalid rating format"}), 400)
-    
+
     if not date_read:
         return make_response(jsonify({"error": "Missing 'date_read' field"}), 400)
-    
-    
 
-    # Prepare book data
     book_data = {
         "_id": id,
         "title": book.get("title"),
@@ -552,14 +553,23 @@ def have_read_book(id):
         "date_read": date_read
     }
 
-    # Check if the book is already marked as read
     if "have_read" in user and any(b["_id"] == id for b in user["have_read"]):
         return make_response(jsonify({"message": "Book already marked as read"}), 200)
 
-    # Add book to 'have_read' list
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"have_read": book_data}})
 
-    return make_response(jsonify({"message": "Book added to have_read list"}), 200)
+    # Re-fetch user to ensure we have latest data
+    user = users.find_one({"username": username})
+
+    # Check for awards 🏆
+    new_awards = check_and_assign_awards(user)
+
+    response = {"message": "Book added to have_read list"}
+    if new_awards:
+        response["new_awards"] = new_awards
+
+    return make_response(jsonify(response), 200)
+
 
 @books_bp.route("/api/v1.0/have-read", methods=["GET"])
 @jwt_required
@@ -591,17 +601,14 @@ def edit_have_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
 
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Find the book in the user's "have_read" list
     book_index = next((i for i, b in enumerate(user.get("have_read", [])) if b["_id"] == id), None)
     if book_index is None:
         return make_response(jsonify({"error": "Book not found in have read list"}), 404)
 
-    # Get JSON data from request
     data = request.get_json()
     updates = {}
 
@@ -617,11 +624,9 @@ def edit_have_read_book(id):
     if "date_read" in data:
         updates["date_read"] = data["date_read"]
 
-    # If no valid updates, return an error
     if not updates:
         return make_response(jsonify({"error": "No valid fields to update"}), 400)
 
-    # Update the specific book in the user's "have_read" list
     users.update_one(
         {"_id": user["_id"], f"have_read.{book_index}._id": id},
         {"$set": {f"have_read.{book_index}.{key}": value for key, value in updates.items()}}
@@ -636,12 +641,10 @@ def remove_all_have_read_books():
     token_data = request.token_data
     username = token_data['username']
 
-    # Retrieve the user from the database
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Remove all followers from the user's followers list
     users.update_one({"_id": user["_id"]}, {"$set": {"have_read": []}})
 
     
@@ -654,20 +657,14 @@ def remove_have_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
 
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Check if the book is in have_read
     if "have_read" not in user or not any(b["_id"] == id for b in user["have_read"]):
         return make_response(jsonify({"error": "Book not found in have_read list"}), 404)
 
-    # Remove the book from have_read
     users.update_one({"_id": user["_id"]}, {"$pull": {"have_read": {"_id": id}}})
-
-
-
 
     return make_response(jsonify({
         "message": "Book removed from have_read list",
@@ -680,12 +677,10 @@ def want_to_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
     
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     
-    # Find the book
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
@@ -699,8 +694,6 @@ def want_to_read_book(id):
     }
     
     
-    
-    # Add book to have_read list
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"want_to_read": book_data}})
     
     
@@ -712,12 +705,10 @@ def start_to_read_book(id):
     token_data = request.token_data
     username = token_data["username"]
     
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     
-    # Find the book
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
@@ -736,11 +727,9 @@ def start_to_read_book(id):
         "progress": 0
     }
     
-    # Check if the book is already in the 'currently_reading' list
     if "currently_reading" in user and any(b["_id"] == id for b in user["currently_reading"]):
         return make_response(jsonify({"message": "Book already in currently reading list"}), 200)
 
-    # Remove the book from 'want_to_read' if it exists
     if "want_to_read" in user:
         users.update_one(
             {"_id": user["_id"]},
@@ -748,7 +737,6 @@ def start_to_read_book(id):
         )
 
     
-    # Add book to have_read list
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"currently_reading": book_data}})
     
     
@@ -795,12 +783,10 @@ def update_reading_progress(book_id):
     
     new_page = int(new_page)
     
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     
-    # Find the book in the user's currently reading list
     currently_reading = user.get("currently_reading", [])
     book = next((b for b in currently_reading if str(b["_id"]) == book_id), None)
     
@@ -812,16 +798,13 @@ def update_reading_progress(book_id):
     if new_page > total_pages:
         return make_response(jsonify({"error": "Page number exceeds total pages"}), 400)
     
-    # Update the current page in the user's currently reading list
     users.update_one(
         {"_id": user["_id"], "currently_reading._id": book_id},
         {"$set": {"currently_reading.$.current_page": new_page, "currently_reading.$.reading_time": datetime.now()}}
     )
     
-    # Recalculate progress
     progress = user_progress_aggregation(user["_id"])
     
-    # Update progress in the currently reading list
     users.update_one(
         {"_id": user["_id"], "currently_reading._id": book_id},
         {"$set": {"currently_reading.$.progress": progress}}
@@ -836,16 +819,13 @@ def remove_currently_reading_book(id):
     token_data = request.token_data
     username = token_data["username"]
 
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Check if the book is in have_read
     if "currently_reading" not in user or not any(b["_id"] == id for b in user["currently_reading"]):
         return make_response(jsonify({"error": "Book not found in currently_reading list"}), 404)
 
-    # Remove the book from have_read
     users.update_one({"_id": user["_id"]}, {"$pull": {"currently_reading": {"_id": id}}})
 
     return make_response(jsonify({
@@ -858,12 +838,10 @@ def add_to_favourites(id):
     token_data = request.token_data
     username = token_data["username"]
     
-    # Find the user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     
-    # Find the book
     book = books.find_one({"_id": ObjectId(id)})
     if not book:
         return make_response(jsonify({"error": "Invalid Book ID"}), 404)
@@ -877,16 +855,11 @@ def add_to_favourites(id):
         "pages": book.get("pages"),
     }
     
-    # Check if the book is already in the 'currently_reading' list
     if "favourite_books" in user and any(b["_id"] == id for b in user["favourite_books"]):
         return make_response(jsonify({"message": "Book already in favourites"}), 200)
 
-
-    
-    # Add book to have_read list
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"favourite_books": book_data}})
-    
-    
+
     return make_response(jsonify({"message": "Book added to favourites"}), 200)
 
 @books_bp.route("/api/v1.0/favourites", methods=["GET"])
@@ -898,94 +871,3 @@ def get_all_favourite_reads():
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
     return make_response(jsonify({"favourite_books": user.get("favourite_books", [])}), 200)
-
-
-@books_bp.route("/api/v1.0/publish-book", methods=["POST"])
-@jwt_required
-@author_required
-def publish_book():
-    token_data = request.token_data
-    username = token_data["username"]
-
-    # Find user and get their preferences
-    user = users.find_one({"username": username}, {"password": 0})
-    if not user:
-        return make_response(jsonify({"error": "User not found"}), 404)
-
-    
-
-    title = request.form.get("title")
-    series = request.form.get("series", "")
-    author = user.get("name")
-    description = request.form.get("description")
-    language = request.form.get("language")
-    isbn = request.form.get("isbn")
-    genres = request.form.getlist("genres")
-    characters = request.form.getlist("characters", [])
-    triggers = request.form.getlist("triggers", [])
-    book_format = request.form.get("bookFormat")
-    edition = request.form.get("edition", "")
-    pages = int(request.form.get("pages", 0))
-    publisher = request.form.get("publisher", "")
-    publish_date = request.form.get("publishDate")
-    first_publish_date = request.form.get("firstPublishDate")
-    awards = request.form.getlist("awards", [])
-    cover_img = request.form.get("coverImg")
-    price = int(request.form.get("price", 0))
-    
-    if not title or not author:
-        return make_response(jsonify({"error": "Title and Author are required fields"}), 400)
-    
-    if isinstance(genres, str):
-        genres_list = [g.strip() for g in genres.split(",")]
-    elif isinstance(genres, list):
-        genres_list = [str(g).strip() for g in genres]
-    else:
-        genres_list = []
-    
-    if isinstance(triggers, str):
-        triggers_list = [t.strip() for t in triggers.split(",")]
-    elif isinstance(triggers, list):
-        triggers_list = [str(t).strip() for t in triggers]
-    else:
-        triggers_list = []
-
-    if isinstance(characters, str):
-        character_list = [c.strip() for c in characters.split(",")]
-    elif isinstance(characters, list):
-        character_list = [str(c).strip() for c in characters]
-    else:
-        character_list = []
-
-    if isinstance(awards, str):
-        award_list = [a.strip() for a in awards.split(",")]
-    elif isinstance(awards, list):
-        award_list = [str(a).strip() for a in awards]
-    else:
-        award_list = []
-
-    book_data = {
-        "title": title,
-        "series": series,
-        "author": author,
-        "user_score": 0,
-        "user_reviews": [],
-        "description": description,
-        "language": language,
-        "isbn": isbn,
-        "genres": genres_list,
-        "characters": character_list,
-        "triggers": triggers_list,
-        "bookFormat": book_format,
-        "edition": edition,
-        "pages": pages,
-        "publisher": publisher,
-        "publishDate": publish_date,
-        "firstPublishDate": first_publish_date,
-        "awards": award_list,
-        "coverImg": cover_img,
-        "price": price
-    }
-    
-    inserted_book = books.insert_one(book_data)
-    return make_response(jsonify({"message": "Book successfully published", "book_id": str(inserted_book.inserted_id)}), 201)

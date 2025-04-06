@@ -14,7 +14,11 @@ users = globals.db.users
 books = globals.db.books
 thoughts = globals.db.thoughts
 banned_emails = globals.db.banned_emails
+deleted_accounts = globals.db.deleted_accounts
 
+# AUTH APIS
+#------------------------------------------------------------------------------------------------------------------
+# 1. BASIC REGISTRATION FEATURES
 @auth_bp.route('/api/v1.0/signup', methods=["POST"])
 def signup():
     name = request.form.get('name')
@@ -56,6 +60,7 @@ def signup():
         'have_read': [],
         'want_to_read': [],
         'currently_reading': [],
+        'awards': [],
         'admin': admin,
         'created_at': current_time,
         'suspension_end_date': None
@@ -118,8 +123,9 @@ def serialize_user(user):
     return user
 
 
+#------------------------------------------------------------------------------------------------------------------
+# 2. USER CRUD FEATURES
 @auth_bp.route('/api/v1.0/users', methods=["GET"])
-#@jwt_required
 def show_all_users():
     page_num, page_size = 1, 10
     search_username = request.args.get('username')
@@ -128,9 +134,8 @@ def show_all_users():
     if search_username:
         query["username"] = {"$regex": search_username, "$options": "i"}
 
-    users_list = list(users.find(query, {'password': 0}))  # Exclude passwords
+    users_list = list(users.find(query, {'password': 0}))
 
-    # Convert ObjectId to string
     for user in users_list:
         user['_id'] = str(user['_id'])
 
@@ -140,7 +145,6 @@ def show_all_users():
 
 
 @auth_bp.route("/api/v1.0/users/<string:id>", methods=["GET"])
-#@jwt_required
 def show_one_user(id):
     user = users.find_one({"_id": ObjectId(id)}, {"password": 0})
     if not user:
@@ -152,7 +156,6 @@ def show_one_user(id):
     books_by_author = []
     
     if user.get("user_type") == "author":
-        # If the user is an author, find all books written by this author
         for book in books.find({"author": user["name"]}):
             book["_id"] = str(book["_id"])
             books_by_author.append(book)
@@ -173,29 +176,37 @@ def show_one_user(id):
     
     return make_response(jsonify(response_data), 200)
 
+@auth_bp.route("/api/v1.0/users/<string:id>", methods=["DELETE"])
+@jwt_required
+@admin_required
+def delete_user(id):
+    result = users.delete_one({"_id":ObjectId(id)})
+    if result.deleted_count == 1:
+        return make_response(jsonify({}), 204)
+    else:
+        return make_response(jsonify({"error": "Invalid user ID"}), 404)
+    
 
-    
-    
+
+#------------------------------------------------------------------------------------------------------------------
+# 3. FOLLOW FEATURES
 @auth_bp.route('/api/v1.0/users/<string:id>/follow', methods=["POST"])
 @jwt_required
 def follow_user(id):
     token_data = request.token_data
     username = token_data['username']
 
-    # Fetch the user to follow
     user_to_follow = users.find_one({"_id": ObjectId(id)}, {"password": 0})
     if not user_to_follow:
         return make_response(jsonify({"error": "User to follow not found"}), 404)
 
-    # Fetch the current user
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    if id == str(user["_id"]):  # Ensure users cannot follow themselves
+    if id == str(user["_id"]):
         return make_response(jsonify({"error": "You cannot follow yourself"}), 400)
 
-    # Create follow data objects
     following_data = {
         "_id": id,
         "username": user_to_follow["username"]
@@ -206,19 +217,14 @@ def follow_user(id):
         "username": username
     }
 
-    # Check if already following
     if any(f["username"] == user_to_follow["username"] for f in user.get("following", [])):
         return make_response(jsonify({"message": "Already following this user"}), 400)
 
-    # Update `following` for the current user
     users.update_one({"_id": user["_id"]}, {"$push": {"following": following_data}})
 
-    # Update `followers` for the followed user
     users.update_one({"_id": user_to_follow["_id"]}, {"$push": {"followers": follower_data}})
 
     return make_response(jsonify({"message": f"Successfully followed {user_to_follow['username']}"}), 200)
-
-
 
 
 @auth_bp.route('/api/v1.0/users/<string:id>/unfollow', methods=["POST"])
@@ -238,23 +244,59 @@ def unfollow_user(id):
     if id == str(user["_id"]):
         return make_response(jsonify({"error": "You cannot unfollow yourself"}), 400)
 
-    # Check if the user is not following
     if id not in user["following"]:
         return make_response(jsonify({"message": "You are not following this user"}), 400)
 
-    # Remove user from the following list of the current user and remove the current user from the followers list of the other user
     users.update_one({"_id": user["_id"]}, {"$pull": {"following": id}})
     users.update_one({"_id": user_to_unfollow["_id"]}, {"$pull": {"followers": user["_id"]}})
 
     return make_response(jsonify({"message": f"Successfully unfollowed {user_to_unfollow['username']}"}), 200)
 
+#------------------------------------------------------------------------------------------------------------------
+# 3.5. DELETE FOLLOW FEATURES FOR TESTING
+@auth_bp.route('/api/v1.0/remove-all-followers', methods=["POST"])
+@jwt_required
+def remove_all_followers():
+    token_data = request.token_data
+    username = token_data['username']
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    users.update_one({"_id": user["_id"]}, {"$set": {"followers": []}})
+
+    for follower in user['followers']:
+        users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
+
+    return make_response(jsonify({"message": "All followers removed successfully"}), 200)
+
+@auth_bp.route('/api/v1.0/remove-all-following', methods=["POST"])
+@jwt_required
+def remove_all_following():
+    token_data = request.token_data
+    username = token_data['username']
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    users.update_one({"_id": user["_id"]}, {"$set": {"following": []}})
+
+    for follower in user['followers']:
+        users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
+
+    return make_response(jsonify({"message": "All followers removed successfully"}), 200)
+
+
+#------------------------------------------------------------------------------------------------------------------
+# 4. USER FEED FEATURES
 @auth_bp.route('/api/v1.0/feed', methods=["GET"])
 @jwt_required
 def user_feed():
     token_data = request.token_data
     username = token_data['username']
     
-    # Fetch the user document
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
@@ -266,17 +308,15 @@ def user_feed():
     following_ids = [ObjectId(f["_id"]) for f in following_list]
     feed_activities = []
 
-    # Helper function to parse timestamps correctly
     def parse_timestamp(ts):
         if isinstance(ts, str):
             try:
                 return datetime.fromisoformat(ts)
             except ValueError:
-                return datetime.min  # Default to the oldest possible if parsing fails
+                return datetime.min  
         return ts if isinstance(ts, datetime) else datetime.min
 
 
-    # Add the logged-in user's activities to the feed
     reviews_by_user = []
     for book in books.find({"user_reviews.username": username}):
         for review in book.get("user_reviews", []):
@@ -338,7 +378,6 @@ def user_feed():
 
     feed_activities.extend(replies_by_user)
 
-    # Add the user's reading progress to the feed
     for book in user.get("currently_reading", []):
         progress = book.get('progress', 0)
         activity = {
@@ -351,11 +390,20 @@ def user_feed():
         }
         feed_activities.append(activity)
 
-    # Add activities for each followed user
+    for book in user.get("have_read", []):
+        rating = book.get('stars')
+        activity = {
+            "activity_type": "Finished Reading",
+            "username": "You",
+            "book_title": book.get("title", "Unknown Title"),
+            "rating": f"{rating}",
+            "timestamp": book.get("date_read", datetime.now().isoformat())
+        }
+        feed_activities.append(activity)
+
     for followed_user in users.find({"_id": {"$in": following_ids}}):
         followed_username = followed_user["username"]
 
-        # Get recent reviews for followed user
         for book in books.find({"user_reviews.username": followed_username}):
             for review in book.get("user_reviews", []):
                 if review.get("username") == followed_username:
@@ -421,59 +469,25 @@ def user_feed():
             }
             feed_activities.append(activity)
 
+        for book in followed_user.get("have_read", []):
+            rating = book.get('stars')
+            activity = {
+                "activity_type": "Finished Reading",
+                "username": followed_username,
+                "book_title": book.get("title", "Unknown Title"),
+                "rating": f"{rating}",
+                "timestamp": book.get("date_read", datetime.now().isoformat())
+            }
+            feed_activities.append(activity)
+
     # Sort all activities by timestamp in reverse order (most recent first)
     feed_activities.sort(key=lambda x: parse_timestamp(x["timestamp"]), reverse=True)
 
     # Return the combined feed activities
     return make_response(jsonify({"feed": feed_activities}), 200)
 
-
-
-
-@auth_bp.route('/api/v1.0/remove-all-followers', methods=["POST"])
-@jwt_required
-def remove_all_followers():
-    token_data = request.token_data
-    username = token_data['username']
-
-    # Retrieve the user from the database
-    user = users.find_one({"username": username})
-    if not user:
-        return make_response(jsonify({"error": "User not found"}), 404)
-
-    # Remove all followers from the user's followers list
-    users.update_one({"_id": user["_id"]}, {"$set": {"followers": []}})
-
-    # Optionally, you may want to remove the user from the followers lists of those who were following them
-    for follower in user['followers']:
-        users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
-
-    return make_response(jsonify({"message": "All followers removed successfully"}), 200)
-
-@auth_bp.route('/api/v1.0/remove-all-following', methods=["POST"])
-@jwt_required
-def remove_all_following():
-    token_data = request.token_data
-    username = token_data['username']
-
-    # Retrieve the user from the database
-    user = users.find_one({"username": username})
-    if not user:
-        return make_response(jsonify({"error": "User not found"}), 404)
-
-    # Remove all followers from the user's followers list
-    users.update_one({"_id": user["_id"]}, {"$set": {"following": []}})
-
-    # Optionally, you may want to remove the user from the followers lists of those who were following them
-    for follower in user['followers']:
-        users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
-
-    return make_response(jsonify({"message": "All followers removed successfully"}), 200)
-
-
-
-
-    
+#------------------------------------------------------------------------------------------------------------------
+# 5. USER PROFILE FEATURES
 @auth_bp.route("/api/v1.0/profile", methods=["GET"])
 @jwt_required
 def show_profile():
@@ -498,7 +512,6 @@ def edit_profile():
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Get form data
     data = request.get_json()
     
     updates = {}
@@ -522,41 +535,67 @@ def edit_profile():
     if "profile_pic" in data:
         profile_pic_url = data["profile_pic"]
 
-        if not profile_pic_url:  # If it's an empty string (""), handle accordingly
+        if not profile_pic_url: 
             updates["profile_pic"] = ""
         
-        # If you want to make sure the profile pic is a permanent URL (not a blob URL)
         if profile_pic_url.startswith("blob:"):
             return make_response(jsonify({"error": "Temporary blob URL is not allowed. Please upload a permanent image URL."}), 400)
         
         updates["profile_pic"] = profile_pic_url
-    #if "password" in data:
-    #    hashed_password = bcrypt.hashpw(data["password"].encode('utf-8'), bcrypt.gensalt())
-    #    updates["password"] = hashed_password
+
 
     users.update_one({"username": username}, {"$set": updates})
 
     return make_response(jsonify({"message": "Profile updated successfully"}), 200)
 
+@auth_bp.route('/api/v1.0/delete-account', methods=["DELETE"])
+@jwt_required
+def delete_own_account():
+    token_data = request.token_data
+    username = token_data['username']
+    
+    reason = request.form.get('reason', 'No reason provided')
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    # Save the reason for deletion (optional so we can use user feedback)
+    deletion_log = {
+        "username": username,
+        "reason": reason,
+        "timestamp": datetime.utcnow()
+    }
+    deleted_accounts.insert_one(deletion_log)
+
+    # Delete user from the database
+    result = users.delete_one({"_id": user["_id"]})
+    
+    if result.deleted_count == 1:
+        # Add the token to the blacklist to log the user out
+        token = request.headers.get('x-access-token')
+        blacklist.insert_one({"token": token})
+        
+        return make_response(jsonify({"message": "Your account has been deleted and you have been logged out.", "reason": reason}), 200)
+    else:
+        return make_response(jsonify({"error": "Failed to delete account"}), 500)
+
+#------------------------------------------------------------------------------------------------------------------
+# 5.5. USER PROFILE FEATURES (FOR TESTING)
 @auth_bp.route('/api/v1.0/remove-all-authors', methods=["POST"])
 @jwt_required
 def remove_all_favourite_authors():
     token_data = request.token_data
     username = token_data['username']
 
-    # Retrieve the user from the database
     user = users.find_one({"username": username})
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Remove all followers from the user's followers list
     users.update_one({"_id": user["_id"]}, {"$set": {"favourite_authors": []}})
 
     return make_response(jsonify({"message": "All authors removed successfully"}), 200)
 
-    # Optionally, you may want to remove the user from the followers lists of those who were following them
-    #for follower in user['followers']:
-    #    users.update_one({"_id": ObjectId(follower['id'])}, {"$pull": {"following": user["_id"]}})
 
 @auth_bp.route('/api/v1.0/remove-profile-pic', methods=['POST'])
 @jwt_required
@@ -568,24 +607,14 @@ def remove_profile_pic():
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Set the profile picture field to null or default image URL
     users.update_one({"username": username}, {"$set": {"profile_pic": ""}})
 
     return make_response(jsonify({"message": "Profile picture removed successfully"}), 200)
 
 
     
-@auth_bp.route("/api/v1.0/users/<string:id>", methods=["DELETE"])
-@jwt_required
-@admin_required
-def delete_user(id):
-    result = users.delete_one({"_id":ObjectId(id)})
-    if result.deleted_count == 1:
-        return make_response(jsonify({}), 204)
-    else:
-        return make_response(jsonify({"error": "Invalid user ID"}), 404)
-    
-
+#------------------------------------------------------------------------------------------------------------------
+# 5. USER VIOLATION FEATURES
 @auth_bp.route('/api/v1.0/users/<user_id>/suspend', methods=["POST"])
 @jwt_required
 @admin_required
@@ -600,6 +629,20 @@ def suspend_user(user_id):
 
     if results.modified_count == 1:
         return make_response(jsonify({'message': "User has been suspended "}), 201)
+    else:
+        return make_response(jsonify({"error": "Invalid User ID"}), 404)
+    
+
+@auth_bp.route('/api/v1.0/users/<user_id>/ban', methods=["POST"])
+@jwt_required
+@admin_required
+def ban_user(user_id):
+    result = users.find_one( { "_id" : ObjectId(user_id) } )
+    banned_user = users.delete_one( { "_id" : ObjectId(user_id) } )
+    if banned_user.deleted_count == 1:
+        email = result.get('email')
+        banned_emails.insert_one({"emails": email}) # THEIR EMAIL IS ADDED TO THE BANNED EMAILS COLLECTION
+        return make_response(jsonify({"message": "User has been banned"}), 201)
     else:
         return make_response(jsonify({"error": "Invalid User ID"}), 404)
     

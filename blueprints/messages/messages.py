@@ -9,7 +9,8 @@ messages = globals.db.messages
 users = globals.db.users
 
 
-
+# MESSAGE APIS
+#------------------------------------------------------------------------------------------------------------------
 @messages_bp.route("/api/v1.0/inbox", methods=["GET"])
 @jwt_required
 def get_messages():
