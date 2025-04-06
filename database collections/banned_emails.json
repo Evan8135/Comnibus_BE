@@ -1,0 +1,8 @@
+[
+    {
+        "_id": {
+            "$oid": "67f26ff34484a3e8110a7f1c"
+        },
+        "emails": "bannedemail@gmail.com"
+    }
+]

@@ -1,0 +1,12 @@
+[
+    {
+        "_id": {
+            "$oid": "67f26e6af7b970d6e0dfbed3"
+        },
+        "username": "deleteaccount",
+        "reason": "testing",
+        "timestamp": {
+            "$date": "2025-04-06T12:07:06.409Z"
+        }
+    }
+]

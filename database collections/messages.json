@@ -372,5 +372,588 @@
             "$date": "2025-03-20T12:50:41.255Z"
         },
         "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e00e0161f9f896a200f60a"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "pagemaster1 liked your thought!",
+        "timestamp": {
+            "$date": "2025-03-23T13:34:57.75Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e2afe6f022ece8928785a2"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-03-25T13:30:14.336Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e2b15df022ece8928785a3"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-03-25T13:36:29.107Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e3fac06ac8f53d7b5a2cf9"
+        },
+        "recipient_name": "testauthor1",
+        "content": "Dear Test Author, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-03-26T13:01:52.896Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e418ec251f3b0b43d962a2"
+        },
+        "recipient_name": "reviewbomber",
+        "content": "Dear Review Bomb Tester, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-03-26T15:10:36.611Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e419742028c9219bdf4acb"
+        },
+        "recipient_name": "reviewbomber2",
+        "content": "Dear Review Bomb Tester 2, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-03-26T15:12:52.031Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e41ac92028c9219bdf4acd"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'A Little Life' has been approved and added to our system. Here is the link to the book: http://localhost:4200/api/v1.0/books/67e41ac92028c9219bdf4acc. Thank you.",
+        "timestamp": {
+            "$date": "2025-03-26T15:18:33.063Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e42ebcc17021d51d28f3bf"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', your request for 'The Road' has been approved and added to our system. Here is the link to the book: http://localhost:4200/api/v1.0/books/67e42ebcc17021d51d28f3be. Thank you.",
+        "timestamp": {
+            "$date": "2025-03-26T16:43:40.303Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e96d1a4079e74d9e842eee"
+        },
+        "recipient_name": "testauthor2",
+        "content": "Dear Test Author 2, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-03-30T16:11:06.731Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67e96e634079e74d9e842ef1"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testauthor2 liked your review!",
+        "timestamp": {
+            "$date": "2025-03-30T16:16:35.845Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ea6f04f3402a7a70e0d2b3"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', we regret to inform you that your request for 'test' has been rejected and will not be added to our system. Thank you.",
+        "timestamp": {
+            "$date": "2025-03-31T10:31:32.353Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ea70967cf3d325f647672f"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Dear 'pagemaster1', we regret to inform you that your request for 'test request' has been rejected and will not be added to our system. Thank you.",
+        "timestamp": {
+            "$date": "2025-03-31T10:38:14.821Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ea9db9ad7d8e1d571003e3"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "pagemaster1 liked your reply!",
+        "timestamp": {
+            "$date": "2025-03-31T13:50:49.302Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67eaa6bbcd860d1432994716"
+        },
+        "recipient_name": "testauthor2",
+        "content": "Test Author, published a new book called Test Book 5: The Revenge",
+        "timestamp": {
+            "$date": "2025-03-31T14:29:15.522Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee755e33f3b853a4809992"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your thought!",
+        "timestamp": {
+            "$date": "2025-04-03T11:47:42.327Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee7bbfe78341027ee76947"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "pagemaster1 liked your reply!",
+        "timestamp": {
+            "$date": "2025-04-03T12:14:55.236Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee7d49e78341027ee76948"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "pagemaster1 liked your reply!",
+        "timestamp": {
+            "$date": "2025-04-03T12:21:29.568Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee81c33d0517639ce42ece"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-03T12:40:35.958Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee8c0af5cb6749fa53d5dc"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your thought!",
+        "timestamp": {
+            "$date": "2025-04-03T13:24:26.579Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee938a8292e62ce6145fee"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your Reply on None's thought!",
+        "timestamp": {
+            "$date": "2025-04-03T13:56:26.113Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee93c58292e62ce6145fef"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your Reply on None's thought!",
+        "timestamp": {
+            "$date": "2025-04-03T13:57:25.589Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67ee941f8292e62ce6145ff0"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your Reply on None's thought!",
+        "timestamp": {
+            "$date": "2025-04-03T13:58:55.38Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f10ffc423a2b7b7f7b3bff"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser4 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-05T11:11:56.442Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f11031423a2b7b7f7b3c01"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-05T11:12:49.355Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f11035423a2b7b7f7b3c02"
+        },
+        "recipient_name": "testuser4",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-05T11:12:53.935Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f13ef1c4be86a240e174e3"
+        },
+        "recipient_name": "testuser1",
+        "content": "pagemaster1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-05T14:32:17.126Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f13ef5c4be86a240e174e4"
+        },
+        "recipient_name": "testuser1",
+        "content": "pagemaster1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-05T14:32:21.455Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f13f0dc4be86a240e174e5"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-05T14:32:45.376Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f24504fe8a1c7131eb1186"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T09:10:28.786Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f24758accd58661cc4eeb7"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T09:20:24.175Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f25f6b5ebf31b0764475d0"
+        },
+        "recipient_name": "banneduser",
+        "content": "Dear Banned User Test, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-04-06T11:03:07.718Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f26e1cf7b970d6e0dfbed2"
+        },
+        "recipient_name": "deleteaccount",
+        "content": "Dear Delete Account Test, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-04-06T12:05:48.38Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f26f7af7b970d6e0dfbed6"
+        },
+        "recipient_name": "banneduser",
+        "content": "Dear Ban Account Test, Welcome to COMNIBUS, a humble book website made by readers for readers.\nYou can now access some of the features we have to offer such as: \n1. Write book reviews \n2. Catalogue the books you are reading \n3. Follow your friends and like minded readers \n These are but a few of the features with more on the way. \nHappy Browsing, \nThe Team at COMNIBUS",
+        "timestamp": {
+            "$date": "2025-04-06T12:11:38.077Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f274c14484a3e8110a7f1d"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the review does not violate our community guidlines and will not be removed.",
+        "timestamp": {
+            "$date": "2025-04-06T12:34:09.7Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f274c84484a3e8110a7f1e"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the review does not violate our community guidlines and will not be removed.",
+        "timestamp": {
+            "$date": "2025-04-06T12:34:16.075Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f275524484a3e8110a7f20"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T12:36:34.465Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f27a09be94561b779a7893"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T12:56:41.252Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f27b437289a9afc98e7677"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T13:01:55.206Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f27ca4c2ca1442cb8e4d67"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the review has indeed violated our community guidelines and we will be removing it.",
+        "timestamp": {
+            "$date": "2025-04-06T13:07:48.371Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f27f4b4410ef98bdc064bb"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "testuser1 liked your review!",
+        "timestamp": {
+            "$date": "2025-04-06T13:19:07.987Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f287ea4410ef98bdc064bd"
+        },
+        "recipient_name": "testuser1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T13:55:54.766Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f292c18e1ce5c8cb2ceb85"
+        },
+        "recipient_name": "testauthor1",
+        "content": "pagemaster1 liked your thought!",
+        "timestamp": {
+            "$date": "2025-04-06T14:42:09.367Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f29ea5a9ebea2f484c6e5a"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the review reply has indeed violated our community guidelines and we will be removing it.",
+        "timestamp": {
+            "$date": "2025-04-06T15:32:53.269Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a241ad20979f1e6085ae"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T15:48:17.551Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a3e8e69ac478e297e362"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T15:55:20.515Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a3f5e69ac478e297e363"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the thought has indeed violated our community guidelines and we have removed it.",
+        "timestamp": {
+            "$date": "2025-04-06T15:55:33.258Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a3f5e69ac478e297e364"
+        },
+        "recipient_name": "testauthor1",
+        "content": "Your thought has been removed because it violated our community guidelines.",
+        "timestamp": {
+            "$date": "2025-04-06T15:55:33.259Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a5184dbc8a857449ca94"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T16:00:24.317Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a51e4dbc8a857449ca95"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the thought has indeed violated our community guidelines and we have removed it.",
+        "timestamp": {
+            "$date": "2025-04-06T16:00:30.897Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a51e4dbc8a857449ca96"
+        },
+        "recipient_name": "testuser1",
+        "content": "Your thought has been removed because it violated our community guidelines.",
+        "timestamp": {
+            "$date": "2025-04-06T16:00:30.898Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a56a1c38c1e058c8a162"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Your report will be reviewed by our admins to see if it violates our community guidlines",
+        "timestamp": {
+            "$date": "2025-04-06T16:01:46.415Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a56f1c38c1e058c8a163"
+        },
+        "recipient_name": "pagemaster1",
+        "content": "Thank you for your report! After reviewing it, we have determined that the review has indeed violated our community guidelines and we have removed it.",
+        "timestamp": {
+            "$date": "2025-04-06T16:01:51.298Z"
+        },
+        "is_read": false
+    },
+    {
+        "_id": {
+            "$oid": "67f2a56f1c38c1e058c8a164"
+        },
+        "recipient_name": "testuser1",
+        "content": "Your review has been removed because it violated our community guidelines.",
+        "timestamp": {
+            "$date": "2025-04-06T16:01:51.298Z"
+        },
+        "is_read": false
     }
 ]

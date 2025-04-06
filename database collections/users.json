@@ -20,19 +20,29 @@
         "favourite_genres": [
             ""
         ],
-        "followers": [],
-        "following": [
+        "followers": [
             {
                 "_id": "67af3b77eb62e531d8959ba2",
                 "username": "testuser1"
             }
         ],
-        "pronouns": "he/him",
-        "currently_reading": [
+        "following": [
             {
-                "_id": "67cf14681615080dd41f7743",
+                "_id": "67af3b77eb62e531d8959ba2",
+                "username": "testuser1"
+            },
+            {
+                "_id": "67e96d1a4079e74d9e842eed",
+                "username": "testauthor2"
+            }
+        ],
+        "pronouns": "he/him",
+        "currently_reading": [],
+        "have_read": [
+            {
+                "_id": "67e42c77c17021d51d28f3bc",
                 "title": "Devils",
-                "coverImg": "https://i.imgur.com/fsuIzIl.jpeg",
+                "coverImg": "https://i.imgur.com/7W5lgVv.jpeg",
                 "author": [
                     "Fyodor Dostoevsky",
                     "Constance Garnett (Translator)"
@@ -41,7 +51,6 @@
                     "Fiction",
                     "Russia",
                     "Russian Literature",
-                    "Classic Literature",
                     "Literature",
                     "Philosophy",
                     "Classics",
@@ -49,55 +58,8 @@
                     "19th Century",
                     "Politics"
                 ],
-                "reading_time": {
-                    "$date": "2025-03-20T13:51:34.771Z"
-                },
-                "total_pages": 705,
-                "current_page": 286,
-                "progress": 41.0
-            }
-        ],
-        "have_read": [
-            {
-                "_id": "67d596d4561a597dcc4e0eb6",
-                "title": "Ten Days that Shook the World",
-                "coverImg": "https://i.imgur.com/8OWV6cv.jpeg",
-                "author": [
-                    "John Reed"
-                ],
-                "genres": [
-                    "History",
-                    "Nonfiction",
-                    "Russia",
-                    "Russian History",
-                    "Politics",
-                    "Journalism",
-                    "Classics",
-                    "War",
-                    "Soviet Union"
-                ],
-                "stars": 3.5
-            },
-            {
-                "_id": "67d99f556437a08bc3e305f4",
-                "title": "The Road",
-                "coverImg": "https://i.imgur.com/OmBbEpr.jpeg",
-                "author": [
-                    "Cormac McCarthy"
-                ],
-                "genres": [
-                    "Fiction",
-                    "Science Fiction",
-                    "Dystopia",
-                    "Post Apocalyptic",
-                    "Horror",
-                    "Literature",
-                    "Novels",
-                    "Audiobook",
-                    "Apocalyptic",
-                    "Contemporary"
-                ],
-                "stars": 5.0
+                "stars": 4.0,
+                "date_read": "2025-04-05"
             }
         ],
         "user_type": "",
@@ -128,7 +90,11 @@
                 ]
             }
         ],
-        "profile_pic": "https://i.imgur.com/XetdBkq.jpeg"
+        "profile_pic": "https://i.imgur.com/XetdBkq.jpeg",
+        "created_at": {
+            "$date": "2024-06-05T15:02:05.629Z"
+        },
+        "awards": []
     },
     {
         "_id": {
@@ -167,50 +133,50 @@
             {
                 "_id": "67c9b6fbe190825d21839542",
                 "username": "testuser5"
+            },
+            {
+                "_id": "678e43a3edd22bc69a94c67e",
+                "username": "pagemaster1"
             }
         ],
         "have_read": [
             {
-                "_id": "677d535a2f00c2c42ea6b705",
-                "title": "The Dream Master",
-                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1391150384l/61992.jpg",
+                "_id": "677d535a2f00c2c42ea6b6fb",
+                "title": "قصه های امیرعلی 1",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1343599711l/15776672.jpg",
                 "author": [
-                    "Roger Zelazny"
+                    "امیرعلی نبویان"
                 ],
                 "genres": [
-                    "Science Fiction",
-                    "Fantasy",
+                    "Short Stories",
+                    "Humor",
                     "Fiction",
-                    "Science Fiction Fantasy",
-                    "Speculative Fiction",
-                    "Novels",
-                    "Psychology",
-                    "Classics",
-                    "20th Century",
-                    "American"
+                    "Comedy"
                 ],
-                "stars": 3.5
+                "stars": 5.0,
+                "date_read": "2025-04-06"
             },
             {
-                "_id": "677d535a2f00c2c42ea6b93e",
-                "title": "The Doors of His Face, the Lamps of His Mouth",
-                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1422062944l/13824.jpg",
+                "_id": "677d535a2f00c2c42ea6b6fa",
+                "title": "Heren van de thee",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1253449218l/5505098.jpg",
                 "author": [
-                    "Roger Zelazny"
+                    "Hella S. Haasse"
                 ],
                 "genres": [
-                    "Science Fiction",
-                    "Fantasy",
-                    "Short Stories",
                     "Fiction",
-                    "Science Fiction Fantasy",
-                    "Anthologies",
-                    "Collections",
-                    "Speculative Fiction",
-                    "Short Story Collection",
-                    "Literature"
+                    "Dutch Literature",
+                    "Literature",
+                    "Historical Fiction",
+                    "Asia",
+                    "Roman",
+                    "20th Century",
+                    "Classics",
+                    "Historical",
+                    "Novels"
                 ],
-                "stars": 4.0
+                "stars": 5.0,
+                "date_read": "2025-04-06"
             },
             {
                 "_id": "677d535a2f00c2c42ea6b6fc",
@@ -233,7 +199,53 @@
                     "Fiction",
                     "Young Adult"
                 ],
-                "stars": 3.0
+                "stars": 5.0,
+                "date_read": "2025-04-12"
+            },
+            {
+                "_id": "677d535a2f00c2c42ea6b6fd",
+                "title": "I Wrote This for You and Only You",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1426385945l/25144676.jpg",
+                "author": [
+                    "pleasefindthis (Goodreads Author)",
+                    "Jon Ellis (Photographer)",
+                    "Iain S. Thomas (Goodreads Author)"
+                ],
+                "genres": [
+                    "Poetry",
+                    "Fiction",
+                    "Romance",
+                    "Art",
+                    "Young Adult",
+                    "Love",
+                    "Contemporary",
+                    "Short Stories",
+                    "Adult"
+                ],
+                "stars": 4.5,
+                "date_read": "2025-04-10"
+            },
+            {
+                "_id": "677d535a2f00c2c42ea6b6fe",
+                "title": "Lady of the Forest",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1321226482l/662639.jpg",
+                "author": [
+                    "Jennifer Roberson (Goodreads Author)"
+                ],
+                "genres": [
+                    "Fantasy",
+                    "Historical Fiction",
+                    "Romance",
+                    "Fiction",
+                    "Historical",
+                    "Medieval",
+                    "Historical Romance",
+                    "British Literature",
+                    "Retellings",
+                    "Adult"
+                ],
+                "stars": 4.5,
+                "date_read": "2025-04-18"
             }
         ],
         "want_to_read": [],
@@ -241,7 +253,14 @@
         "admin": "false",
         "suspension_end_date": null,
         "profile_pic": "https://i.imgur.com/PNjOHzz.jpeg",
-        "pronouns": "prefer not to say"
+        "pronouns": "prefer not to say",
+        "created_at": {
+            "$date": "2024-07-02T15:02:05.641Z"
+        },
+        "awards": [
+            "First Book Read",
+            "5 Books Read"
+        ]
     },
     {
         "_id": {
@@ -270,27 +289,23 @@
         "following": [],
         "have_read": [
             {
-                "id": "677d535a2f00c2c42ea6b6fc",
-                "title": "The Rescue",
-                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388260971l/9573401.jpg",
+                "_id": "677d535a2f00c2c42ea6bb27",
+                "title": "The Talisman and Black House",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1323105529l/97126.jpg",
                 "author": [
-                    "Erin Hunter",
-                    "James L. Barry (Illustrations)",
-                    "Dan Jolley (Goodreads Author)"
+                    "Stephen King (Goodreads Author)",
+                    "Peter Straub (Goodreads Author)"
                 ],
                 "genres": [
-                    "Manga",
-                    "Fantasy",
-                    "Graphic Novels",
-                    "Animals",
-                    "Comics",
-                    "Cats",
-                    "Childrens",
-                    "Middle Grade",
+                    "Horror",
                     "Fiction",
-                    "Young Adult"
+                    "Fantasy",
+                    "Science Fiction Fantasy",
+                    "Thriller",
+                    "Science Fiction"
                 ],
-                "stars": 0.0
+                "stars": 5.0,
+                "date_read": "2025-03-17"
             }
         ],
         "want_to_read": [
@@ -319,7 +334,11 @@
         "admin": "false",
         "suspension_end_date": null,
         "profile_pic": "https://i.imgur.com/ckWLMb4.jpeg",
-        "pronouns": ""
+        "pronouns": "",
+        "created_at": {
+            "$date": "2024-04-20T15:02:05.643Z"
+        },
+        "awards": []
     },
     {
         "_id": {
@@ -341,10 +360,14 @@
             "Philosophy",
             "Nonfiction",
             "Education",
-            "Science"
+            "Science",
+            "Academic",
+            "Mathematics",
+            "Climate Change"
         ],
         "favourite_authors": [
-            ""
+            "Friedrich Nietzsche",
+            "Friedrich Engels"
         ],
         "favourite_books": [],
         "profile_pic": "https://i.imgur.com/D4Sq4ng.jpeg",
@@ -355,7 +378,11 @@
         "currently_reading": [],
         "admin": "false",
         "suspension_end_date": null,
-        "pronouns": "prefer not to say"
+        "pronouns": "prefer not to say",
+        "created_at": {
+            "$date": "2024-07-06T15:02:05.645Z"
+        },
+        "awards": []
     },
     {
         "_id": {
@@ -419,7 +446,63 @@
                 "username": "testuser1"
             }
         ],
-        "have_read": [],
+        "have_read": [
+            {
+                "_id": "677d535a2f00c2c42ea6b700",
+                "title": "The Complete Secret Seven Library",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1394421326l/21266675.jpg",
+                "author": [
+                    "Enid Blyton"
+                ],
+                "genres": [
+                    "Childrens",
+                    "Fiction"
+                ],
+                "stars": 5.0,
+                "date_read": "2025-03-24"
+            },
+            {
+                "_id": "677d535a2f00c2c42ea6b701",
+                "title": "Two on a Tower",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1348261074l/28849.jpg",
+                "author": [
+                    "Thomas Hardy"
+                ],
+                "genres": [
+                    "Classics",
+                    "Fiction",
+                    "19th Century",
+                    "Romance",
+                    "Victorian",
+                    "British Literature",
+                    "Literature",
+                    "English Literature",
+                    "Historical Fiction",
+                    "Novels"
+                ],
+                "stars": 5.0,
+                "date_read": "2025-03-24"
+            },
+            {
+                "_id": "677d535a2f00c2c42ea6bb27",
+                "title": "The Talisman and Black House",
+                "coverImg": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1323105529l/97126.jpg",
+                "author": [
+                    "Stephen King (Goodreads Author)",
+                    "Peter Straub (Goodreads Author)"
+                ],
+                "genres": [
+                    "Horror",
+                    "Fiction",
+                    "Fantasy",
+                    "Science Fiction Fantasy",
+                    "Thriller",
+                    "Science Fiction"
+                ],
+                "stars": 5.0,
+                "date_read": "2025-03-18"
+            }
+        ],
         "want_to_read": [],
         "currently_reading": [
             {
@@ -448,6 +531,203 @@
         ],
         "admin": "false",
         "suspension_end_date": null,
-        "pronouns": "she/her"
+        "pronouns": "she/her",
+        "created_at": {
+            "$date": "2024-06-28T15:02:05.646Z"
+        },
+        "awards": []
+    },
+    {
+        "_id": {
+            "$oid": "67e3fac06ac8f53d7b5a2cf8"
+        },
+        "name": "Test Author",
+        "username": "testauthor1",
+        "email": "testauthor1@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJFJKTk12RU84WmdudGJra2RqMGJIdE8wOTlFTmRNNm56RlpxN2pudjdURkFNeHZxbzlTZ2xH",
+                "subType": "00"
+            }
+        },
+        "pronouns": "he/him",
+        "user_type": "author",
+        "favourite_genres": [
+            "Philosophy",
+            "Mathematics",
+            "Religion",
+            "Education",
+            "Classic Literature",
+            "Classics"
+        ],
+        "favourite_authors": [],
+        "favourite_books": [],
+        "profile_pic": "https://i.imgur.com/2qgt2UW.jpeg",
+        "followers": [
+            {
+                "_id": "67e96d1a4079e74d9e842eed",
+                "username": "testauthor2"
+            }
+        ],
+        "following": [],
+        "have_read": [],
+        "want_to_read": [],
+        "currently_reading": [
+            {
+                "_id": "67eaa6bbcd860d1432994715",
+                "title": "Test Book 5: The Revenge",
+                "coverImg": "/images/no_cover.jpg",
+                "author": [
+                    "Test Author"
+                ],
+                "genres": [
+                    "12th Century",
+                    "14th Century",
+                    "15th Century"
+                ],
+                "reading_time": {
+                    "$date": "2025-04-03T11:38:50.798Z"
+                },
+                "total_pages": 200,
+                "current_page": 0,
+                "progress": 0
+            }
+        ],
+        "admin": "false",
+        "suspension_end_date": null,
+        "created_at": {
+            "$date": "2025-02-13T15:02:05.648Z"
+        },
+        "awards": []
+    },
+    {
+        "_id": {
+            "$oid": "67e418ec251f3b0b43d962a1"
+        },
+        "name": "Review Bomb Tester",
+        "username": "reviewbomber",
+        "email": "bomber@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJHZzTlAxdnNrWFR5OWpnRGQwS3k0NC5BZldUZk9xcjByT3Ztei96QUoxRmdtaWdQSm5WT1d1",
+                "subType": "00"
+            }
+        },
+        "pronouns": null,
+        "user_type": "reader",
+        "favourite_genres": [
+            "12th Century",
+            "14th Century",
+            "15th Century",
+            "16th Century"
+        ],
+        "favourite_authors": [
+            "A. Meredith Walters (Goodreads Author)",
+            "A.A. Fair",
+            "A.L. Jackson (Goodreads Author)",
+            "A.M. Blackmore (Translator)"
+        ],
+        "favourite_books": [],
+        "profile_pic": "",
+        "followers": [],
+        "following": [],
+        "have_read": [],
+        "want_to_read": [],
+        "currently_reading": [],
+        "admin": "false",
+        "suspension_end_date": null,
+        "awards": []
+    },
+    {
+        "_id": {
+            "$oid": "67e419742028c9219bdf4aca"
+        },
+        "name": "Review Bomb Tester 2",
+        "username": "reviewbomber2",
+        "email": "bomber2@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJHNOaFR2am8zZ0dxMVEyeldUU25FVnVVQlVPeE9vTi5haDhUQ1JMaGhtaHdTSFN6WU1BYU02",
+                "subType": "00"
+            }
+        },
+        "pronouns": null,
+        "user_type": "reader",
+        "favourite_genres": [
+            "12th Century",
+            "14th Century",
+            "15th Century",
+            "16th Century"
+        ],
+        "favourite_authors": [],
+        "favourite_books": [],
+        "profile_pic": "",
+        "followers": [],
+        "following": [],
+        "have_read": [],
+        "want_to_read": [],
+        "currently_reading": [],
+        "admin": "false",
+        "created_at": {
+            "$date": "2025-03-26T15:12:51.712Z"
+        },
+        "suspension_end_date": {
+            "$date": "2025-04-07T11:13:48.364Z"
+        },
+        "awards": []
+    },
+    {
+        "_id": {
+            "$oid": "67e96d1a4079e74d9e842eed"
+        },
+        "name": "Test Author 2",
+        "username": "testauthor2",
+        "email": "testauthor2@gmail.com",
+        "password": {
+            "$binary": {
+                "base64": "JDJiJDEyJFI1c1IwemM3ZzZsdk1OcjFHc3Nnai5lSEZFMWVxQTVjQjBkMTlWRGVkR2s5YUVOQ3I3UmJ1",
+                "subType": "00"
+            }
+        },
+        "pronouns": "she/her",
+        "user_type": "author",
+        "favourite_genres": [
+            "12th Century",
+            "14th Century",
+            "15th Century",
+            "19th Century",
+            "20th Century",
+            "Academia",
+            "Academic",
+            "Action",
+            "Activism",
+            "Adolescence",
+            "Adoption",
+            "Adult"
+        ],
+        "favourite_authors": [],
+        "favourite_books": [],
+        "profile_pic": "https://i.imgur.com/gUwNQL2.jpeg",
+        "followers": [
+            {
+                "_id": "678e43a3edd22bc69a94c67e",
+                "username": "pagemaster1"
+            }
+        ],
+        "following": [
+            {
+                "_id": "67e3fac06ac8f53d7b5a2cf8",
+                "username": "testauthor1"
+            }
+        ],
+        "have_read": [],
+        "want_to_read": [],
+        "currently_reading": [],
+        "admin": "false",
+        "created_at": {
+            "$date": "2025-03-30T16:11:06.201Z"
+        },
+        "suspension_end_date": null,
+        "awards": []
     }
 ]

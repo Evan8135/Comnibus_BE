@@ -1,1 +1,76 @@
-[]
+[
+    {
+        "_id": {
+            "$oid": "67ea9c2d20fe48b731f4b672"
+        },
+        "username": "pagemaster1",
+        "comment": "test",
+        "likes": 2,
+        "dislikes": 0,
+        "created_at": {
+            "$date": "2025-03-31T13:44:13.431Z"
+        },
+        "replies": [
+            {
+                "_id": {
+                    "$oid": "67ea9c3c20fe48b731f4b673"
+                },
+                "username": "pagemaster1",
+                "content": "hello",
+                "created_at": {
+                    "$date": "2025-03-31T13:44:28.175Z"
+                },
+                "likes": 1,
+                "dislikes": 0
+            },
+            {
+                "_id": {
+                    "$oid": "67ea9d8dad7d8e1d571003e2"
+                },
+                "username": "pagemaster1",
+                "content": "howdy",
+                "created_at": {
+                    "$date": "2025-03-31T13:50:05.411Z"
+                },
+                "likes": 0,
+                "dislikes": 0
+            },
+            {
+                "_id": {
+                    "$oid": "67eaa10ef1f8baada71125a2"
+                },
+                "username": "pagemaster1",
+                "content": "hi",
+                "created_at": {
+                    "$date": "2025-03-31T14:05:02.49Z"
+                },
+                "likes": 1,
+                "dislikes": 0
+            },
+            {
+                "_id": {
+                    "$oid": "67ee871af5cb6749fa53d5d9"
+                },
+                "username": "pagemaster1",
+                "content": "test",
+                "created_at": {
+                    "$date": "2025-04-03T13:03:22.105Z"
+                },
+                "likes": 2,
+                "dislikes": 0
+            },
+            {
+                "_id": {
+                    "$oid": "67ee8801f5cb6749fa53d5db"
+                },
+                "username": "testuser1",
+                "content": "test",
+                "created_at": {
+                    "$date": "2025-04-03T13:07:13.918Z"
+                },
+                "likes": 1,
+                "dislikes": 0
+            }
+        ]
+    }
+]
