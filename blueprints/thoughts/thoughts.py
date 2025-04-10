@@ -365,8 +365,8 @@ def report_reply(thought_id, reply_id):
         return make_response(jsonify({"error": "Please provide a reason for the report."}), 400)
 
     thought = thoughts.find_one(
-        {"replies._id": ObjectId(thought_id)},
-        {"_id": 1, "user_reviews.$": 1}
+        {"_id": ObjectId(thought_id),  "replies._id": ObjectId(reply_id)},
+        {"_id": 1, "replies.$": 1}
     )
 
     if not thought or "replies" not in thought:
@@ -381,7 +381,7 @@ def report_reply(thought_id, reply_id):
         "_id": ObjectId(),
         "type": "thought reply",
         "item_id": str(reply_id),
-        "thought_id": str(reply_id),
+        "thought_id": str(thought_id),
         "reported_by": reporter_username,
         "reason": reason,
         "reported_at": datetime.utcnow(),

@@ -117,7 +117,7 @@ def approve_report(report_id):
             {"replies.$": 1}
         )
         if thought and thought.get("replies"):
-            thought_reply_user = thought['replies'][0]["username"]
+            thought_reply_user = thought["replies"][0]["username"]
 
         update_result = thoughts.update_one(
             {"_id": thought_id},

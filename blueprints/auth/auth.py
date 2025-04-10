@@ -85,8 +85,18 @@ def login():
                     suspension_end_date = suspension_end_date.replace(tzinfo=timezone.utc)
                 
             if suspension_end_date and datetime.now(timezone.utc) < suspension_end_date:
-                remaining_days = (suspension_end_date - datetime.now(timezone.utc)).days
-                return make_response(jsonify({'message': 'Account is suspended. Come back in ' + str(remaining_days) +' days'}), 403)
+                delta = suspension_end_date - datetime.now(timezone.utc)
+                remaining_days = delta.days
+                remaining_hours = delta.seconds // 3600
+                remaining_minutes = delta.seconds // 60
+
+                if delta.total_seconds() >= 86400:
+                    return make_response(jsonify({'message': f'Account is suspended. Come back in {remaining_days} days'}), 403)
+                elif delta.total_seconds() >= 7200:
+                    return make_response(jsonify({'message': f'Account is suspended. Come back in {remaining_hours} hours'}), 403)
+                else:
+                    return make_response(jsonify({'message': f'Account is suspended. Come back in {remaining_minutes} minutes'}), 403)
+
             if bcrypt.checkpw(bytes(auth.password, 'UTF-8'), user["password"]):
                 token = jwt.encode( {
                     'name': user['name'],
@@ -126,6 +136,7 @@ def serialize_user(user):
 #------------------------------------------------------------------------------------------------------------------
 # 2. USER CRUD FEATURES
 @auth_bp.route('/api/v1.0/users', methods=["GET"])
+@jwt_required
 def show_all_users():
     page_num, page_size = 1, 10
     search_username = request.args.get('username')
@@ -145,6 +156,7 @@ def show_all_users():
 
 
 @auth_bp.route("/api/v1.0/users/<string:id>", methods=["GET"])
+@jwt_required
 def show_one_user(id):
     user = users.find_one({"_id": ObjectId(id)}, {"password": 0})
     if not user:
@@ -345,7 +357,7 @@ def user_feed():
                         "book_id": str(book["_id"]),
                         "review_id": str(review["_id"]),
                         "reply_id": str(review_reply["_id"]),
-                        "reply_content": review_reply["content"],
+                        "review_reply_content": review_reply["content"],
                         "timestamp": review_reply.get("created_at", datetime.now().isoformat())
                     })
     feed_activities.extend(review_replies_by_user)
@@ -395,6 +407,7 @@ def user_feed():
         activity = {
             "activity_type": "Finished Reading",
             "username": "You",
+            "book_id": str(thought["_id"]),
             "book_title": book.get("title", "Unknown Title"),
             "rating": f"{rating}",
             "timestamp": book.get("date_read", datetime.now().isoformat())
@@ -474,6 +487,7 @@ def user_feed():
             activity = {
                 "activity_type": "Finished Reading",
                 "username": followed_username,
+                "book_id": str(book["_id"]),
                 "book_title": book.get("title", "Unknown Title"),
                 "rating": f"{rating}",
                 "timestamp": book.get("date_read", datetime.now().isoformat())
@@ -560,7 +574,7 @@ def delete_own_account():
     if not user:
         return make_response(jsonify({"error": "User not found"}), 404)
 
-    # Save the reason for deletion (optional so we can use user feedback)
+    # Save the reason for deletion (optional so we can use their feedback)
     deletion_log = {
         "username": username,
         "reason": reason,
