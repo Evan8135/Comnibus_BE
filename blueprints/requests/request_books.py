@@ -23,7 +23,7 @@ def add_new_book_request():
     genres = request.form.get('genres')
     language = request.form.get('language')
     series = request.form.get('series', '')
-    isbn = request.form.get('isbn', '')
+    isbn = int(request.form.get('isbn', 0))
 
     if not title or not author or not genres or not language:
         return make_response(jsonify({"error": "You missed a required field"}), 400)
@@ -119,8 +119,12 @@ def approve_book_request(id):
                 return None
         return None
 
-    publish_year = extract_year(approved_book_data['publish_date'])
-    first_publish_year = extract_year(approved_book_data['first_publish_date'])
+    publish_year = extract_year(approved_book_data['publishDate'])
+    first_publish_year = extract_year(approved_book_data['firstPublishDate'])
+
+    book_request_isbn = book_request.get('isbn', 0)
+    approved_isbn = int(approved_book_data.get('isbn', 0))
+    final_isbn = approved_isbn if book_request_isbn == 0 and approved_isbn != 0 else book_request_isbn
 
     approved_book_data.update({
         'title': book_request['title'],
@@ -131,7 +135,7 @@ def approve_book_request(id):
         'user_score': int(approved_book_data.get('user_score', 0)),
         'description': approved_book_data.get('description', ''),
         'user_reviews': [],
-        'isbn': book_request['isbn'],
+        'isbn': int(final_isbn),
         'characters': approved_book_data.get('characters', []), 
         'triggers': approved_book_data.get('triggers', []),
         'bookFormat': approved_book_data.get('bookFormat', ''),

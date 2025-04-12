@@ -124,7 +124,7 @@ def add_book():
     author = request.form.get("author")
     description = request.form.get("description")
     language = request.form.get("language")
-    isbn = request.form.get("isbn")
+    isbn = int(request.form.get("isbn"))
     genres = request.form.get("genres")
     characters = request.form.get("characters")
     triggers = request.form.get("triggers")
@@ -699,6 +699,35 @@ def want_to_read_book(id):
     
     return make_response(jsonify({"message": "Book added to tbr list"}), 200)
 
+@books_bp.route("/api/v1.0/want-to-read", methods=["GET"])
+@jwt_required
+def get_all_tbr_books():
+    token_data = request.token_data
+    username = token_data['username']
+    user = users.find_one({"username": username}, {"want_to_read": 1})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+    return make_response(jsonify({"want_to_read": user.get("want_to_read", [])}), 200)
+
+@books_bp.route("/api/v1.0/books/<string:id>/want-to-read", methods=["DELETE"])
+@jwt_required
+def remove_tbr_book(id):
+    token_data = request.token_data
+    username = token_data["username"]
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    if "have_read" not in user or not any(b["_id"] == id for b in user["want_to_read"]):
+        return make_response(jsonify({"error": "Book not found in tbr list"}), 404)
+
+    users.update_one({"_id": user["_id"]}, {"$pull": {"want_to_read": {"_id": id}}})
+
+    return make_response(jsonify({
+        "message": "Book removed from tbr list",
+    }), 200)
+
 @books_bp.route("/api/v1.0/books/<string:id>/current-read", methods=["POST"])
 @jwt_required
 def start_to_read_book(id):
@@ -861,6 +890,25 @@ def add_to_favourites(id):
     users.update_one({"_id": user["_id"]}, {"$addToSet": {"favourite_books": book_data}})
 
     return make_response(jsonify({"message": "Book added to favourites"}), 200)
+
+@books_bp.route("/api/v1.0/books/<string:id>/favourites", methods=["DELETE"])
+@jwt_required
+def remove_favourite_book(id):
+    token_data = request.token_data
+    username = token_data["username"]
+
+    user = users.find_one({"username": username})
+    if not user:
+        return make_response(jsonify({"error": "User not found"}), 404)
+
+    if "have_read" not in user or not any(b["_id"] == id for b in user["favourite_books"]):
+        return make_response(jsonify({"error": "Book not found in favourites list"}), 404)
+
+    users.update_one({"_id": user["_id"]}, {"$pull": {"favourite_books": {"_id": id}}})
+
+    return make_response(jsonify({
+        "message": "Book removed from favourites list",
+    }), 200)
 
 @books_bp.route("/api/v1.0/favourites", methods=["GET"])
 @jwt_required
