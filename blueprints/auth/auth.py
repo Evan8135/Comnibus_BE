@@ -103,6 +103,7 @@ def login():
                     'username': auth.username,
                     'admin': user['admin'],
                     'followers': user['followers'],
+                    'following': user['following'],
                     'user_type': user['user_type'],
                     'exp': datetime.now(timezone.utc) + timedelta(hours=1) }, globals.secret_key, algorithm="HS256")
                 return make_response(jsonify({'token': token}), 200)
@@ -229,8 +230,6 @@ def follow_user(id):
         "username": username
     }
 
-    if any(f["username"] == user_to_follow["username"] for f in user.get("following", [])):
-        return make_response(jsonify({"message": "Already following this user"}), 400)
 
     users.update_one({"_id": user["_id"]}, {"$push": {"following": following_data}})
 
@@ -256,8 +255,7 @@ def unfollow_user(id):
     if id == str(user["_id"]):
         return make_response(jsonify({"error": "You cannot unfollow yourself"}), 400)
 
-    if id not in user["following"]:
-        return make_response(jsonify({"message": "You are not following this user"}), 400)
+    
 
     users.update_one({"_id": user["_id"]}, {"$pull": {"following": id}})
     users.update_one({"_id": user_to_unfollow["_id"]}, {"$pull": {"followers": user["_id"]}})

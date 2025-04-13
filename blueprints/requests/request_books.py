@@ -56,7 +56,7 @@ def add_new_book_request():
 
     new_request_id = requests.insert_one(new_request)
 
-    request_link = f"http://localhost:4200/api/v1.0/requests/{new_request_id.inserted_id}"
+    request_link = f"http://localhost:4200/requests/{new_request_id.inserted_id}"
     
     return make_response(jsonify({
         "message": "Your book request has been submitted and will be reviewed by our admins",
@@ -150,7 +150,7 @@ def approve_book_request(id):
     })
     
     approved_book_id = books.insert_one(approved_book_data)
-    approved_book_link = f"http://localhost:4200/api/v1.0/books/{approved_book_id.inserted_id}"
+    approved_book_link = f"http://localhost:4200/books/{approved_book_id.inserted_id}"
 
     send_message(
         recipient_name=book_request['username'],
