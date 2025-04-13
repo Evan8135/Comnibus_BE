@@ -33,7 +33,7 @@ def add_new_review(id):
     
     account_creation_date = user.get("created_at")
     if (current_time - account_creation_date).days < MIN_ACCOUNT_AGE_DAYS:
-        return make_response(jsonify({"error": f"Your account must be at least 5 days old to post reviews."}), 400)
+        return make_response(jsonify({"error": f"Your account must be at least 3 days old to post reviews."}), 400)
 
     reviews_by_user = []
     for book in books.find({"user_reviews.username": username}):
